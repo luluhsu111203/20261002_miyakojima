@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>問卷測試</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e5c63">
+
+<!-- 安裝為 App（Android / 通用） -->
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- 安裝為 App（iPhone） -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="問卷測試">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+
+<style>
+  :root {
+    --ink: #14232b;
+    --muted: #5b6b73;
+    --paper: #f2f5f6;
+    --card: #ffffff;
+    --line: #cfd9dd;
+    --brand: #0e5c63;
+    --brand-dark: #0a464c;
+    --ok: #1f8a4c;
+    --warn: #b86e00;
+    --bad: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC",
+                 "Microsoft JhengHei", "Heiti TC", sans-serif;
+    font-size: 18px;
+    line-height: 1.55;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 頂部：延伸到狀態列底下，所以要加上安全區域邊距 */
+  header {
+    background: var(--brand);
+    color: #fff;
+    padding: calc(env(safe-area-inset-top, 0px) + 18px)
+             calc(env(safe-area-inset-right, 0px) + 20px)
+             20px
+             calc(env(safe-area-inset-left, 0px) + 20px);
+  }
+  header h1 { margin: 0 0 12px; font-size: 26px; font-weight: 700; letter-spacing: .02em; }
+  .status { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 16px; }
+  .status li { display: flex; align-items: center; gap: 10px; }
+  .status .k { opacity: .8; min-width: 5.5em; }
+  .status .v { font-weight: 600; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: #9db3b7; flex: none; border: 2px solid rgba(255,255,255,.85); }
+  .dot.on { background: #6fe3a0; }
+  .dot.off { background: #ffb4ab; }
+  .dot.wait { background: #ffd27a; }
+
+  main {
+    flex: 1;
+    padding: 20px calc(env(safe-area-inset-right, 0px) + 20px) 8px calc(env(safe-area-inset-left, 0px) + 20px);
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .notice {
+    background: #fff3d6; border: 1px solid #e8c777; color: #5c4200;
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; font-size: 16px;
+  }
+  .notice[hidden] { display: none; }
+
+  fieldset { border: 0; padding: 0; margin: 0 0 26px; min-width: 0; }
+  legend, label.q { display: block; font-weight: 700; font-size: 20px; margin-bottom: 10px; padding: 0; }
+  .hint { font-weight: 400; color: var(--muted); font-size: 16px; }
+
+  input[type="text"], textarea {
+    width: 100%;
+    font: inherit;
+    color: var(--ink);
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    min-height: 56px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  textarea { min-height: 130px; resize: vertical; }
+  input[type="text"]:focus, textarea:focus { outline: 3px solid #7fc3c9; border-color: var(--brand); }
+
+  .choices { display: grid; gap: 10px; }
+  .choice { position: relative; display: block; }
+  .choice input {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    margin: 0; opacity: 0; cursor: pointer;
+  }
+  .choice span {
+    display: flex; align-items: center; gap: 14px;
+    min-height: 60px; padding: 12px 16px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 12px;
+  }
+  .choice span::before {
+    content: ""; width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid #8aa0a6; flex: none; background: #fff;
+  }
+  .choice input:checked + span { border-color: var(--brand); background: #e3f1f2; font-weight: 700; }
+  .choice input:checked + span::before {
+    border-color: var(--brand); background: var(--brand);
+    box-shadow: inset 0 0 0 5px #e3f1f2;
+  }
+  .choice input:focus-visible + span { outline: 3px solid #7fc3c9; }
+
+  .field-error { color: var(--bad); font-size: 16px; margin-top: 6px; min-height: 1.4em; }
+
+  /* 底部按鈕區：貼齊螢幕底部，避開 iPhone 的 Home 橫條 */
+  footer {
+    position: sticky; bottom: 0;
+    background: linear-gradient(to top, var(--paper) 78%, rgba(242,245,246,0));
+    padding: 14px calc(env(safe-area-inset-right, 0px) + 20px)
+             calc(env(safe-area-inset-bottom, 0px) + 16px)
+             calc(env(safe-area-inset-left, 0px) + 20px);
+  }
+  .footer-inner { max-width: 640px; margin: 0 auto; }
+  button.submit {
+    width: 100%; min-height: 60px;
+    font: inherit; font-size: 20px; font-weight: 700; color: #fff;
+    background: var(--brand); border: 0; border-radius: 14px; cursor: pointer;
+  }
+  button.submit:active { background: var(--brand-dark); }
+  button.submit:disabled { background: #7d9a9e; }
+  .result { margin: 0 0 10px; padding: 12px 14px; border-radius: 10px; font-size: 17px; font-weight: 600; }
+  .result[hidden] { display: none; }
+  .result.ok { background: #dff3e7; color: #14572f; }
+  .result.wait { background: #fff3d6; color: #5c4200; }
+  .result.bad { background: #fbe3e0; color: #7a1a14; }
+  .ver { text-align: center; color: var(--muted); font-size: 14px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>問卷測試</h1>
+    <ul class="status" aria-label="目前狀態">
+      <li><span class="dot" id="dotNet"></span><span class="k">網路</span><span class="v" id="txtNet">檢查中</span></li>
+      <li><span class="dot" id="dotMode"></span><span class="k">開啟方式</span><span class="v" id="txtMode">檢查中</span></li>
+      <li><span class="dot" id="dotSw"></span><span class="k">離線功能</span><span class="v" id="txtSw">檢查中</span></li>
+      <li><span class="dot" id="dotQ"></span><span class="k">待補送</span><span class="v" id="txtQ">0 筆</span></li>
+    </ul>
+  </header>
+
+  <main>
+    <div class="notice" id="noticeUrl" hidden>
+      尚未設定 Apps Script 網址。現在送出的答案只會暫存在這支手機，不會寫進試算表。
+    </div>
+
+    <form id="f" novalidate>
+      <fieldset>
+        <label class="q" for="name">你的名字</label>
+        <input type="text" id="name" name="name" autocomplete="off" enterkeyhint="next">
+        <div class="field-error" id="errName" role="alert"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>今天的心情</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="choice" value="很好"><span>很好</span></label>
+          <label class="choice"><input type="radio" name="choice" value="普通"><span>普通</span></label>
+          <label class="choice"><input type="radio" name="choice" value="不太好"><span>不太好</span></label>
+        </div>
+        <div class="field-error" id="errChoice" role="alert"></div>
+      </fieldset>
+
+      <fieldset>
+        <label class="q" for="text">想補充的話 <span class="hint">（選填）</span></label>
+        <textarea id="text" name="text"></textarea>
+      </fieldset>
+    </form>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p class="result" id="result" role="status" hidden></p>
+      <button class="submit" id="btn" type="button">送出答案</button>
+      <div class="ver">測試版 v1</div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   ★ 只需要改這一行 ★
+   把 Apps Script 部署後拿到的網址（以 https://script.google.com 開頭）
+   貼在下面兩個引號中間。
+   ============================================================ */
+const SCRIPT_URL = "";
+/* ============================================================ */
+
+const QUEUE_KEY = "survey_pending_v1";
+const $ = (id) => document.getElementById(id);
+
+/* ---------- 狀態列 ---------- */
+function setStatus(dot, txt, cls, text) {
+  $(dot).className = "dot " + cls;
+  $(txt).textContent = text;
+}
+
+function isStandalone() {
+  return window.matchMedia("(display-mode: fullscreen)").matches ||
+         window.matchMedia("(display-mode: standalone)").matches ||
+         window.navigator.standalone === true;
+}
+
+function refreshNet() {
+  if (navigator.onLine) setStatus("dotNet", "txtNet", "on", "有網路");
+  else setStatus("dotNet", "txtNet", "off", "沒有網路");
+}
+
+function refreshMode() {
+  if (isStandalone()) setStatus("dotMode", "txtMode", "on", "主畫面 App（全螢幕）");
+  else setStatus("dotMode", "txtMode", "wait", "瀏覽器（尚未安裝）");
+}
+
+/* ---------- 暫存佇列（存在手機的 localStorage） ---------- */
+function loadQueue() {
+  try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]"); }
+  catch (e) { return []; }
+}
+function saveQueue(q) {
+  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); return true; }
+  catch (e) { return false; }
+}
+function refreshQueue() {
+  const n = loadQueue().length;
+  setStatus("dotQ", "txtQ", n ? "wait" : "on", n + " 筆");
+}
+
+/* ---------- 送出 ---------- */
+function deviceName() {
+  const ua = navigator.userAgent;
+  let d = "其他";
+  if (/iPhone|iPad|iPod/.test(ua)) d = "iPhone";
+  else if (/Android/.test(ua)) d = "Android";
+  return d + "／" + (isStandalone() ? "App" : "瀏覽器");
+}
+
+function nowText() {
+  // 固定用台灣時間，格式：2026-09-19 14:30:05
+  return new Date().toLocaleString("sv-SE", { timeZone: "Asia/Taipei" });
+}
+
+let flushing = false;
+async function flushQueue() {
+  if (flushing) return { sent: 0, left: loadQueue().length, reason: "busy" };
+  if (!SCRIPT_URL) return { sent: 0, left: loadQueue().length, reason: "nourl" };
+  if (!navigator.onLine) return { sent: 0, left: loadQueue().length, reason: "offline" };
+
+  flushing = true;
+  let sent = 0;
+  try {
+    let q = loadQueue();
+    while (q.length) {
+      // text/plain + no-cors：避免瀏覽器跨網域預檢，Apps Script 才收得到
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(q[0])
+      });
+      q.shift();
+      saveQueue(q);
+      sent++;
+      refreshQueue();
+    }
+    return { sent, left: 0, reason: "done" };
+  } catch (e) {
+    return { sent, left: loadQueue().length, reason: "error" };
+  } finally {
+    flushing = false;
+    refreshQueue();
+  }
+}
+
+function showResult(cls, text) {
+  const el = $("result");
+  el.className = "result " + cls;
+  el.textContent = text;
+  el.hidden = false;
+}
+
+function validate() {
+  let ok = true;
+  const name = $("name").value.trim();
+  const choice = document.querySelector('input[name="choice"]:checked');
+  $("errName").textContent = name ? "" : "請填寫名字";
+  $("errChoice").textContent = choice ? "" : "請選一個選項";
+  if (!name || !choice) ok = false;
+  return ok;
+}
+
+async function submitForm() {
+  $("result").hidden = true;
+  if (!validate()) {
+    showResult("bad", "還有必填的題目沒有填");
+    return;
+  }
+  const record = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    time: nowText(),
+    name: $("name").value.trim(),
+    choice: document.querySelector('input[name="choice"]:checked').value,
+    text: $("text").value.trim(),
+    device: deviceName()
+  };
+
+  const q = loadQueue();
+  q.push(record);
+  if (!saveQueue(q)) {
+    showResult("bad", "無法暫存答案（手機儲存空間可能不足或被限制）");
+    return;
+  }
+  refreshQueue();
+
+  $("btn").disabled = true;
+  $("btn").textContent = "送出中…";
+  const r = await flushQueue();
+  $("btn").disabled = false;
+  $("btn").textContent = "送出答案";
+
+  if (r.reason === "done") {
+    showResult("ok", "已送出。請到 Google 試算表確認是否多了一列。");
+  } else if (r.reason === "nourl") {
+    showResult("wait", "已暫存在手機，但尚未設定 Apps Script 網址，所以還沒有送出。");
+  } else if (r.reason === "offline") {
+    showResult("wait", "目前沒有網路，答案已暫存在手機。有網路後重新開啟 App 會自動補送。");
+  } else {
+    showResult("wait", "送出失敗，答案已暫存在手機。有網路後重新開啟 App 會自動補送。");
+  }
+  $("f").reset();
+}
+
+$("btn").addEventListener("click", submitForm);
+$("f").addEventListener("submit", (e) => { e.preventDefault(); submitForm(); });
+
+/* ---------- 網路狀態變化：恢復連線時自動補送 ---------- */
+window.addEventListener("online", async () => {
+  refreshNet();
+  const before = loadQueue().length;
+  if (before) {
+    const r = await flushQueue();
+    if (r.sent) showResult("ok", "網路恢復，已自動補送 " + r.sent + " 筆答案。");
+  }
+});
+window.addEventListener("offline", refreshNet);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") { refreshNet(); refreshMode(); refreshQueue(); }
+});
+
+/* ---------- 離線功能（service worker） ---------- */
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  navigator.serviceWorker.register("sw.js").catch(() => {
+    setStatus("dotSw", "txtSw", "off", "啟用失敗");
+  });
+  navigator.serviceWorker.ready.then(() => {
+    setStatus("dotSw", "txtSw", "on", "已啟用（可離線開啟）");
+  });
+} else {
+  setStatus("dotSw", "txtSw", "off", "不支援（需要 https 網址）");
+}
+
+/* ---------- 開啟時初始化 ---------- */
+refreshNet();
+refreshMode();
+refreshQueue();
+if (!SCRIPT_URL) $("noticeUrl").hidden = false;
+if (loadQueue().length) {
+  flushQueue().then((r) => {
+    if (r.sent) showResult("ok", "已自動補送上次暫存的 " + r.sent + " 筆答案。");
+  });
+}
+</script>
+</body>
+</html>

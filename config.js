@@ -10,6 +10,6 @@
    ========================================================= */
 const CONFIG = {
   SYNC_ENABLED: true,
-  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxqa6R8wnshc1czfykvmASd4YzMt8MNLSfRsrOmY13Vm2S31Ee9wmdMCMMHOWn5WC17/exec",
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbx2FBbN9TG06jmLE2dgPtkHIDhYcI-qMqBvyN9F7TdKp9RRyS5aI_FNw9QY0HievklM/exec",
   SYNC_INTERVAL_MS: 60000
 };

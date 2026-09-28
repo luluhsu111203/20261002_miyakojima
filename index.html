@@ -736,17 +736,32 @@
   const getStop = (id, p) => (R.stops[id] || {})[p] || null;
   const dayStars = (date, p) => (getDay(date, p) || {}).stars || 0;
   const keyOf = x => x.type === "day" ? `d|${x.date}|${x.person}` : `s|${x.id}|${x.person}`;
+  // 版本碼（rid）：每次修改評分產生一組新的隨機碼，用來確認試算表裡存的是不是這一版
+  function newRid(){
+    try { if (crypto.randomUUID) return "r" + crypto.randomUUID(); } catch(e){}
+    return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+  }
+  // 舊版留下、沒有版本碼的待送資料：補上版本碼
+  if (pending.some(x => !x.rid)) {
+    pending.forEach(x => {
+      if (x.rid) return;
+      x.rid = newRid();
+      const loc = x.type === "day" ? getDay(x.date, x.person) : getStop(x.id, x.person);
+      if (loc && loc.ts === x.ts) loc.rid = x.rid;
+    });
+    saveJSON(RKEY, R); saveJSON(PKEY, pending);
+  }
   const STOP_DATE = {}; DAYS.forEach(d => d.stops.forEach(s => { STOP_DATE[s.id] = { date: d.date, name: s.name }; }));
   function deviceName(){ const u = navigator.userAgent || ""; return /iPhone/.test(u) ? "iPhone" : /iPad/.test(u) ? "iPad" : /Android/.test(u) ? "Android" : /Mac/.test(u) ? "Mac" : /Windows/.test(u) ? "Windows" : "其他"; }
 
   function setRating(item){
-    item.ts = Date.now(); item.device = deviceName();
+    item.ts = Date.now(); item.rid = newRid(); item.device = deviceName();
     if (item.type === "day") {
       R.days[item.date] = R.days[item.date] || {};
-      R.days[item.date][item.person] = { stars: item.stars, fav: item.fav || "", ts: item.ts };
+      R.days[item.date][item.person] = { stars: item.stars, fav: item.fav || "", ts: item.ts, rid: item.rid };
     } else {
       R.stops[item.id] = R.stops[item.id] || {};
-      R.stops[item.id][item.person] = { stars: item.stars, ts: item.ts };
+      R.stops[item.id][item.person] = { stars: item.stars, ts: item.ts, rid: item.rid };
     }
     pending = pending.filter(x => keyOf(x) !== keyOf(item));
     pending.push(item);
@@ -961,8 +976,9 @@
     Object.keys(days).forEach(date => Object.keys(days[date] || {}).forEach(p => {
       if (!PEOPLE[p]) return;
       const v = days[date][p], c = getDay(date, p);
+      if (c && v.rid && v.rid === c.rid) return; // 同一版，不用合併（試算表時間精度不同也不會誤判成較新）
       if (!c || (+v.ts || 0) > (c.ts || 0)) {
-        const n = { stars: +v.stars || 0, fav: String(v.fav || ""), ts: +v.ts || 0 };
+        const n = { stars: +v.stars || 0, fav: String(v.fav || ""), ts: +v.ts || 0, rid: String(v.rid || "") };
         if (!c || c.stars !== n.stars || c.fav !== n.fav) changed = true;
         R.days[date] = R.days[date] || {}; R.days[date][p] = n;
       }
@@ -970,27 +986,36 @@
     Object.keys(stops).forEach(id => Object.keys(stops[id] || {}).forEach(p => {
       if (!PEOPLE[p]) return;
       const v = stops[id][p], c = getStop(id, p);
+      if (c && v.rid && v.rid === c.rid) return;
       if (!c || (+v.ts || 0) > (c.ts || 0)) {
-        const n = { stars: +v.stars || 0, ts: +v.ts || 0 };
+        const n = { stars: +v.stars || 0, ts: +v.ts || 0, rid: String(v.rid || "") };
         if (!c || c.stars !== n.stars) changed = true;
         R.stops[id] = R.stops[id] || {}; R.stops[id][p] = n;
       }
     }));
-    // 待送資料什麼時候算「已確認」：
-    //  - 手機上的這筆已經被試算表更新的資料取代（上面合併時蓋掉了）→ 不用再送；
-    //  - 試算表的時間戳記 >= 這筆（試算表可能只精確到秒，所以跟「這筆的整秒」比）而且星數相同。
-    //    星數不同代表試算表還是舊的那筆（例如 1 秒內改了評分），要繼續送。
-    //    文字（fav）不做嚴格比對：Code.gs 的 clean() 可能在開頭加上 '。
+    // 待送資料什麼時候算「已確認」（讀回比對，POST 回應讀不到時的備案）：
+    //  - 手機上的這筆已經被更新的版本取代（上面合併時蓋掉了）→ 不用再送；
+    //  - 試算表裡這個鍵的版本碼等於這筆的版本碼 → 已送達。
     pending = pending.filter(x => {
       const loc = x.type === "day" ? getDay(x.date, x.person) : getStop(x.id, x.person);
-      if (loc && loc.ts !== x.ts) return false;
+      if (loc && loc.rid !== x.rid) return false;
       const s = x.type === "day" ? (days[x.date] || {})[x.person] : (stops[x.id] || {})[x.person];
-      if (!s) return true;
-      return !((+s.ts || 0) >= Math.floor(x.ts / 1000) * 1000 && (+s.stars || 0) === (+x.stars || 0));
+      return !(s && s.rid === x.rid);
     });
     saveJSON(RKEY, R); saveJSON(PKEY, pending);
     return changed;
   }
+  // 送出評分並讀取回應。Content-Type 用 text/plain 不會觸發預檢，
+  // Apps Script 轉址後的回應允許跨網域讀取，所以可以直接知道哪幾筆已經寫進去。
+  // 讀不到回應（例如跨網域被擋、網路中斷）時回傳 null：請求可能已經送出，交給讀回比對確認。
+  async function postItems(items){
+    try {
+      const res = await fetch(CONFIG.SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ items }) });
+      if (!res.ok) return null;
+      return JSON.parse(await res.text());
+    } catch(e){ return null; }
+  }
+  const RESEND_MS = 30000; // 送出後 30 秒內還沒確認的，先不要重送
   async function sync(confirmRound){
     if (!SYNC_ON) { setSync("off"); return; }
     if (!navigator.onLine) { setSync("offline"); return; }
@@ -999,14 +1024,27 @@
     if (syncState !== "ok" || pending.length) setSync("syncing");
     try {
       const d = await fetchAll();
-      if (!d || d.__notJson || !d.ok || !(d.version >= 2)) { setSync("oldscript"); return; } // 舊版 Apps Script：不送任何資料
+      // 舊版 Apps Script（沒有版本碼，無法確認送達）：不送任何資料
+      if (!d || d.__notJson || !d.ok || !(d.version >= 3)) { setSync("oldscript"); return; }
       const changed = merge(d); lastOk = new Date();
       if (changed) refreshRatings(); // 沒有變化就不重畫（也不會動到焦點和捲動位置）
-      if (pending.length && !confirmRound) {
+      const now = Date.now();
+      const due = confirmRound ? [] : pending.filter(x => !x.sentAt || now - x.sentAt > RESEND_MS).slice(0, 100);
+      if (due.length) {
         setSync("sending");
-        await fetch(CONFIG.SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ items: pending.slice(0, 100) }) });
-        setTimeout(() => sync(true), 4000); // 4 秒後讀回確認
-        setSync("pending");
+        due.forEach(x => { x.sentAt = now; });
+        saveJSON(PKEY, pending);
+        const r = await postItems(due.map(({ sentAt, ...x }) => x));
+        if (r && r.ok && Array.isArray(r.done)) {
+          const done = new Set(r.done.map(String));
+          pending = pending.filter(x => !done.has(x.rid));
+          saveJSON(PKEY, pending);
+          if (pending.some(x => !x.sentAt)) syncAgain = true; // 超過一次上限的，接著送
+          setSync(pending.length ? "pending" : "ok");
+        } else {
+          setTimeout(() => sync(true), 4000); // 讀不到回應：4 秒後讀回比對版本碼
+          setSync("pending");
+        }
       } else setSync(pending.length ? "pending" : "ok");
     } catch(e){
       setSync(navigator.onLine ? "error" : "offline");

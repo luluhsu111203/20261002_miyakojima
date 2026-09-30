@@ -126,6 +126,25 @@
   .b-body h3{font-size:22px}
   .b-body p{font-size:14px;font-weight:500}
 
+  /* ============ 今日散步進度條 ============ */
+  .walk{position:relative;height:150px;margin-bottom:34px;overflow:hidden}
+  .walk .w-road{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .walk .w-base{fill:none;stroke:#f3dfa8;stroke-width:16;stroke-linecap:round;vector-effect:non-scaling-stroke}
+  .walk .w-edge{fill:none;stroke:var(--navy);stroke-width:20;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.18}
+  .walk .w-dash{fill:none;stroke:#fff;stroke-width:3;stroke-dasharray:2 9;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.9}
+  .walk .w-tick{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:var(--navy);opacity:.35}
+  .walk .w-tick.big{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;opacity:.75}
+  .walk .w-tick.done{background:var(--sun);opacity:1;border:1.5px solid var(--navy)}
+  .walk .w-lbl{position:absolute;font-size:11px;font-weight:800;letter-spacing:.06em;background:var(--white);border:2px solid var(--navy);border-radius:999px;padding:0 8px;line-height:1.5;transform:translateX(-50%);white-space:nowrap}
+  .walk .w-now{position:absolute;left:14px;top:10px;font-size:12px;font-weight:800;background:rgba(255,255,255,.88);border-radius:999px;padding:1px 12px;max-width:calc(100% - 28px)}
+  .walk .w-flag{position:absolute;width:30px;height:38px;transform:translate(-50%,-92%);pointer-events:none}
+  .walk .w-pair{position:absolute;width:52px;height:60px;transform:translate(-50%,-90%);pointer-events:none;will-change:left,top}
+  .walk .w-pair svg{display:block;width:100%;height:100%;overflow:visible;animation:wbob .7s ease-in-out infinite alternate}
+  .walk.resting .w-pair svg{animation:none}
+  @keyframes wbob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+  @media(max-width:640px){.walk{height:130px}.walk .w-pair{width:44px;height:51px}}
+  @media(prefers-reduced-motion:reduce){.walk .w-pair svg{animation:none}}
+
   /* ============ 手繪路線地圖 ============ */
   .mapwrap{border:var(--bw) solid var(--navy);border-radius:var(--r-lg);overflow:hidden;box-shadow:9px 9px 0 var(--navy);background:linear-gradient(160deg,#d8f6f2,var(--map-sea) 45%,#9fe3dc);position:relative;aspect-ratio:10/7;margin-bottom:12px}
   .mapwrap svg{display:block;width:100%;height:100%}
@@ -336,6 +355,7 @@
 <!-- ========== 每日行程 ========== -->
 <section id="days">
   <div class="head"><span class="en script">Daily Route</span><h2>每日行程</h2><p id="dayTip"></p></div>
+  <div class="walk" id="walk"></div>
   <div class="daytabs" id="dayTabs" role="tablist" aria-label="選擇日期"></div>
   <div id="dayPanel" role="tabpanel"></div>
 </section>
@@ -357,6 +377,133 @@
 <button class="totop" id="toTop" type="button" aria-label="回到頂部"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 <script src="config.js"></script>
 <script src="itinerary.js"></script>
+<script>
+  /* 今日散步進度條：兩個牽手小人隨「真實時間」一天 24 小時、每個整點往右走一格。
+     每天 00:00 回到最左邊；10/7 23:59 之後停止計時（不再排程任何計時器）。 */
+  window.MiyakoWalk = (() => {
+    const START = new Date(2026, 9, 2, 0, 0, 0);   // 2026/10/02 00:00
+    const END   = new Date(2026, 9, 8, 0, 0, 0);   // 10/07 23:59:59 之後（不含）
+    const W = 1000, H = 140;
+    // 不規則彎曲的路線（x 由左到右）
+    const D = "M80 102 C150 84 200 126 280 104 S400 84 480 106 S590 128 680 102 S820 84 920 102";
+    const NS = "http://www.w3.org/2000/svg";
+    const PEOPLE = `<svg viewBox="0 0 48 56" aria-hidden="true">
+      <g stroke="#0e4b4d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 34v13M17 34v13" stroke-width="3.6" fill="none"/>
+        <path d="M31 38v9M37 38v9" stroke-width="3.6" fill="none"/>
+        <rect x="8.5" y="16" width="11" height="18" rx="4" fill="#003153"/>
+        <path d="M31 16h6c2 0 2.4 1.6 2.3 3l-.6 6 3.3 14H26l3.3-14-.6-6c-.1-1.4.3-3 2.3-3z" fill="#958bcb"/>
+        <path d="M18 20.5L24 29M10 20.5L8.6 31" stroke-width="5" fill="none"/><path d="M30 20.5L24 29M38 20.5L39.6 31" stroke-width="5" fill="none"/><path d="M18 20.5L24 29M10 20.5L8.6 31" stroke="#003153" stroke-width="2.6" fill="none"/><path d="M30 20.5L24 29M38 20.5L39.6 31" stroke="#958bcb" stroke-width="2.6" fill="none"/><circle cx="8.6" cy="31.6" r="1.9" fill="#f6d2b4" stroke-width="1.4"/><circle cx="39.6" cy="31.6" r="1.9" fill="#f6d2b4" stroke-width="1.4"/>
+        <circle cx="24" cy="29.5" r="2.2" fill="#f6d2b4" stroke-width="1.5"/>
+        <path d="M27.5 10c-1-7 3-9 6.5-9s8 2.5 7 10v9c0 2-1.5 2-3 1l-2-3z" fill="#5a3a2a"/>
+        <circle cx="14" cy="9" r="6.5" fill="#f6d2b4"/>
+        <path d="M7.6 8c0-5.5 4-7.5 7-7.5s6.5 2 6.2 7c-2-1-4-2.6-5.4-3.6C13 6 10 7.4 7.6 8z" fill="#2a2018"/>
+        <circle cx="34" cy="10.5" r="6.3" fill="#f6d2b4"/>
+        <path d="M27.8 10c0-5 3-7.6 6.4-7.6s6.4 2.6 6.4 7.6c-3-.4-5.4-2-6.6-4-1 2.2-3.6 3.8-6.2 4z" fill="#5a3a2a" stroke-width="1"/>
+      </g>
+      <g fill="#0e4b4d"><circle cx="16.4" cy="9.5" r="1"/><circle cx="36.4" cy="11" r="1"/></g>
+    </svg>`;
+    const FLAG = `<svg class="w-flag" viewBox="0 0 30 38" aria-hidden="true"><path d="M6 36V3" stroke="#0e4b4d" stroke-width="3" stroke-linecap="round"/><path d="M6 4h19l-5 6 5 6H6z" fill="#ff7f8f" stroke="#0e4b4d" stroke-width="2.4" stroke-linejoin="round"/></svg>`;
+
+    let el, path, len, pts = [], pair, nowTxt, ticks = [], shown = -1, raf = 0, timer = 0, stopped = false;
+    const pad2 = n => String(n).padStart(2, "0");
+    const nowFn = () => (MiyakoWalk._now ? MiyakoWalk._now() : new Date());
+
+    // 目前狀態：before 尚未開始／run 進行中／after 已結束
+    function state(d) {
+      if (d < START) return { k: "before", hour: 0 };
+      if (d >= END) return { k: "after", hour: 23 };
+      return { k: "run", hour: d.getHours() };
+    }
+    const at = h => path.getPointAtLength(len * h / 23);   // 第 h 個整點對應的路線位置
+    const pct = p => ({ l: p.x / W * 100, t: p.y / H * 100 });
+
+    function place(h) {
+      const q = pct(at(h));
+      pair.style.left = q.l + "%"; pair.style.top = q.t + "%";
+    }
+    function glide(from, to) {
+      cancelAnimationFrame(raf);
+      const t0 = performance.now(), dur = 2200;
+      const step = now => {
+        const p = Math.min(1, (now - t0) / dur), k = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2) / 2;
+        place(from + (to - from) * k);
+        if (p < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }
+
+    function paint(animate) {
+      if (!el || !el.isConnected) return;
+      const d = nowFn(), st = state(d);
+      const h = st.hour;
+      el.classList.toggle("resting", st.k !== "run");
+      ticks.forEach((t, i) => t.classList.toggle("done", st.k !== "before" && i <= h));
+      const md = st.k === "before" ? "10/2" : (st.k === "after" ? "10/7" : (d.getMonth() + 1) + "/" + d.getDate());
+      const msg = st.k === "before" ? "旅程 10/2 00:00 出發，小人先在起點等你"
+        : st.k === "after" ? "旅程結束，下次再一起出發！"
+        : md + "　" + pad2(h) + ":00　今天已經走了 " + Math.round(h / 23 * 100) + "%";
+      nowTxt.textContent = (st.k === "before" ? "🚶 " : st.k === "after" ? "🏁 " : "🕒 ") + msg;
+      el.setAttribute("aria-label", msg);
+      const target = h;
+      if (animate && shown >= 0 && shown !== target) {
+        // 換日 00:00 歸零：直接回到起點，不要倒著走回去
+        if (target < shown) place(target); else glide(shown, target);
+      } else place(target);
+      shown = target;
+    }
+
+    // 只在整點醒來；旅程結束後不再排程（終止計數器）
+    function schedule() {
+      clearTimeout(timer); timer = 0;
+      const d = nowFn();
+      stopped = d >= END;
+      if (stopped) return;
+      const next = new Date(d); next.setHours(d.getHours() + 1, 0, 1, 0);
+      timer = setTimeout(() => { paint(true); schedule(); }, Math.max(1000, next - d));
+    }
+
+    function build() {
+      el.innerHTML = "";
+      el.setAttribute("role", "img");
+      const svg = document.createElementNS(NS, "svg");
+      svg.setAttribute("class", "w-road"); svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+      svg.setAttribute("preserveAspectRatio", "none"); svg.setAttribute("aria-hidden", "true");
+      svg.innerHTML = '<path class="w-edge" d="' + D + '"/><path class="w-base" d="' + D + '"/><path class="w-dash" d="' + D + '"/>';
+      el.appendChild(svg);
+      path = svg.querySelectorAll("path")[2]; len = path.getTotalLength();
+      ticks = [];
+      for (let h = 0; h <= 23; h++) {
+        const q = pct(at(h)), t = document.createElement("i");
+        t.className = "w-tick" + (h % 6 === 0 ? " big" : ""); t.style.left = q.l + "%"; t.style.top = q.t + "%";
+        el.appendChild(t); ticks.push(t);
+      }
+      [[0, "00:00"], [23, "24:00"]].forEach(([h, txt]) => {
+        const q = pct(at(h)), b = document.createElement("span");
+        b.className = "w-lbl"; b.textContent = txt; b.style.left = q.l + "%"; b.style.top = "calc(" + q.t + "% + 14px)";
+        el.appendChild(b);
+      });
+      const g = pct(at(23)), fl = document.createElement("div");
+      fl.innerHTML = FLAG; const fsvg = fl.firstChild; fsvg.style.left = (g.l + 3.2) + "%"; fsvg.style.top = g.t + "%"; el.appendChild(fsvg);
+      pair = document.createElement("div"); pair.className = "w-pair"; pair.innerHTML = PEOPLE; el.appendChild(pair);
+      nowTxt = document.createElement("div"); nowTxt.className = "w-now"; el.appendChild(nowTxt);
+    }
+
+    function mount(target) {
+      if (!target) return;
+      el = target; shown = -1; cancelAnimationFrame(raf);
+      build(); paint(false);
+      schedule();
+    }
+    // 手機休眠後回來：補算一次，並在未結束時重新排程
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden || !el || stopped) return;
+      paint(true); schedule();
+    });
+    return { mount };
+  })();
+  MiyakoWalk.mount(document.getElementById("walk"));
+</script>
 <script>
 (function(){
   "use strict";

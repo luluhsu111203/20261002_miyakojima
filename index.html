@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>宮古島明信片｜6 天 5 夜旅行手冊</title>
 <meta name="description" content="宮古島 6 天 5 夜（2026/10/02–10/07）每日行程：手繪路線地圖、行程點卡片、一鍵導航與集章。">
-<meta name="theme-color" content="#0b3d5c">
+<meta name="theme-color" content="#0e4b4d">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -16,11 +16,11 @@
 <style>
   /* ============ Design Tokens ============ */
   :root{
-    --cream:#fff1d6; --navy:#0b3d5c; --coral:#ff6a4d; --sun:#ffc83d; --sea:#1fa6b8;
+    --cream:#eefaf8; --navy:#0e4b4d; --coral:#ff7f8f; --sun:#ffd166; --sea:#81d8d0; --jeffrey:#003153; --chizumi:#958bcb;
     /* 文字用的深色版本（亮色留給填色／裝飾，文字要達到 WCAG AA 4.5:1） */
-    --coral-ink:#c4401f; --sea-ink:#0f7482;
-    --sky:#8fd8f5; --mint:#bfeee0; --pink:#ffd0c4; --white:#fff; --note:#fff6c9;
-    --map-sea:#bfe9ee; --map-land:#f7e3ae; --map-green:#a9dc98;
+    --coral-ink:#c75600; --sea-ink:#1a8580;
+    --sky:#b8ece6; --mint:#c9f2e8; --pink:#ffdbe0; --white:#fff; --note:#fff6c9;
+    --map-sea:#bfeee9; --map-land:#fdf0cf; --map-green:#a9dc98;
     --bw:4px; --sh:8px 8px 0 var(--navy);
     --r-lg:22px; --r-md:16px; --r-sm:12px;
     --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
@@ -29,7 +29,7 @@
   *{box-sizing:border-box;margin:0}
   html{scroll-behavior:smooth}
   body{background:var(--cream);color:var(--navy);font-family:var(--font);font-weight:600;line-height:1.7;overflow-x:hidden;
-    background-image:radial-gradient(rgba(11,61,92,.09) 1.2px,transparent 1.4px);background-size:16px 16px}
+    background-image:radial-gradient(rgba(14,75,77,.09) 1.2px,transparent 1.4px),linear-gradient(180deg,#d6f4f0 0%,var(--cream) 38%,#f6fbf6 70%,#fdf3dd 100%);background-size:16px 16px,100% 100%;background-attachment:scroll,fixed}
   body.locked{overflow:hidden}
   .script{font-family:var(--script);font-style:italic}
   a{color:inherit;text-decoration:none}
@@ -38,13 +38,13 @@
 
   /* ============ 開場頁 ============ */
   .landing{position:fixed;inset:0;z-index:50;background:var(--cream);display:grid;place-items:center;padding:20px 16px;overflow-y:auto;
-    background-image:radial-gradient(rgba(11,61,92,.09) 1.2px,transparent 1.4px);background-size:16px 16px;transition:opacity .5s}
+    background-image:radial-gradient(rgba(14,75,77,.09) 1.2px,transparent 1.4px),linear-gradient(160deg,#c5efe9 0%,var(--cream) 55%,#fdf3dd 100%);background-size:16px 16px,100% 100%;transition:opacity .5s}
   .landing.out{opacity:0;pointer-events:none}
   .l-card{width:min(520px,100%);background:var(--white);border:var(--bw) solid var(--navy);border-radius:18px;box-shadow:10px 10px 0 var(--navy);padding:28px 22px 26px;text-align:center;transform:rotate(-1deg);position:relative}
   .l-card .greet{font-size:12px;letter-spacing:.4em;color:var(--coral-ink)}
   .l-card h1{font-size:26px;letter-spacing:.08em;margin:6px 0 4px}
   .l-card .sub{font-size:14px;font-weight:500}
-  .l-stamp{position:absolute;right:-14px;top:-22px;width:78px;height:92px;transform:rotate(8deg);filter:drop-shadow(3px 3px 0 rgba(11,61,92,.25))}
+  .l-stamp{position:absolute;right:-14px;top:-22px;width:78px;height:92px;transform:rotate(8deg);filter:drop-shadow(3px 3px 0 rgba(14,75,77,.25))}
   .l-card .who{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}
   .whobtn{font:inherit;cursor:pointer;background:var(--white);color:var(--navy);border:var(--bw) solid var(--navy);border-radius:var(--r-md);box-shadow:5px 5px 0 var(--navy);padding:16px 8px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;transition:.2s}
   .whobtn:hover{transform:translate(2px,2px);box-shadow:3px 3px 0 var(--navy)}
@@ -68,7 +68,7 @@
   @keyframes run{to{transform:translateX(-50%)}}
   .top{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1100px;margin:0 auto;padding:18px 5vw;font-size:14px}
   .top b{font-size:18px;letter-spacing:.2em;display:flex;align-items:center;gap:10px;white-space:nowrap}
-  .top b i{width:30px;height:30px;border-radius:50%;background:var(--coral);border:3px solid var(--navy);display:inline-block}
+  .top b i{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#ff9a2e 0%,#f57c10 60%,#d45a00 100%);border:3px solid var(--navy);display:inline-block}
   .top .links{display:flex;gap:26px;margin-left:auto}
   .top .links a:hover{color:var(--coral-ink)}
   .whochip{font:inherit;font-weight:800;cursor:pointer;background:var(--white);color:var(--navy);border:3px solid var(--navy);border-radius:50%;padding:5px;box-shadow:3px 3px 0 var(--navy);display:grid;place-items:center;line-height:0}
@@ -81,9 +81,9 @@
   .letters .greet{grid-column:1/-1;font-size:12px;letter-spacing:.4em;color:var(--coral-ink)}
   .tile{position:relative;border:3px solid var(--navy);border-radius:var(--r-sm);overflow:hidden;min-height:250px;display:grid;place-items:center}
   .tile svg{position:absolute;inset:0;width:100%;height:100%}
-  .tile b{position:relative;font-size:clamp(64px,10vw,116px);color:var(--cream);-webkit-text-stroke:3px var(--navy);paint-order:stroke fill;text-shadow:5px 5px 0 var(--navy);line-height:1}
+  .tile b{position:relative;font-size:clamp(64px,10vw,116px);color:#fff;-webkit-text-stroke:3px var(--navy);paint-order:stroke fill;text-shadow:5px 5px 0 var(--navy);line-height:1}
   .msg{display:flex;flex-direction:column;justify-content:space-between;gap:16px;position:relative}
-  .stamp{align-self:flex-end;width:112px;height:132px;transform:rotate(4deg);filter:drop-shadow(3px 3px 0 rgba(11,61,92,.25))}
+  .stamp{align-self:flex-end;width:112px;height:132px;transform:rotate(4deg);filter:drop-shadow(3px 3px 0 rgba(14,75,77,.25))}
   .postmark{position:absolute;right:76px;top:34px;width:130px;height:130px;opacity:.75;transform:rotate(-14deg)}
   .intro{padding-right:60px}
   .lines{margin-top:auto}
@@ -91,13 +91,13 @@
   .lines p small{color:var(--coral-ink);font-weight:700;text-align:right}
 
   /* ============ 通用元件 ============ */
-  .btn{display:inline-block;background:var(--coral-ink);color:#fff;border:3px solid var(--navy);border-radius:999px;padding:8px 30px;box-shadow:4px 4px 0 var(--navy);font:inherit;font-weight:800;cursor:pointer;transition:.15s;text-align:center}
+  .btn{display:inline-block;background:linear-gradient(135deg,#ff9a2e 0%,#f57c10 60%,#d45a00 100%);color:#fff;border:3px solid var(--navy);border-radius:999px;padding:8px 30px;box-shadow:4px 4px 0 var(--navy);font:inherit;font-weight:800;cursor:pointer;transition:.15s;text-align:center}
   .btn:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--navy)}
   .path{display:block;width:100%;height:100px;pointer-events:none}
   .path path{fill:none;stroke:var(--navy);stroke-width:2;stroke-dasharray:2 9;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.55}
   section{max-width:1100px;margin:0 auto;padding:20px 5vw}
   .head{text-align:center;margin-bottom:26px}
-  .head .en{display:inline-block;background:var(--sun);border:3px solid var(--navy);padding:0 18px;font-size:22px;transform:rotate(-3deg);box-shadow:4px 4px 0 var(--navy)}
+  .head .en{display:inline-block;background:linear-gradient(135deg,#ffe08a,var(--sun));border:3px solid var(--navy);padding:0 18px;font-size:22px;transform:rotate(-3deg);box-shadow:4px 4px 0 var(--navy)}
   .head h2{font-size:30px;letter-spacing:.1em;margin-top:8px}
   .head p{font-size:14px;font-weight:500;margin-top:2px}
 
@@ -106,7 +106,7 @@
   .daytab{position:relative;font:inherit;font-weight:800;font-size:16px;border:3px solid var(--navy);background:var(--white);color:var(--navy);padding:8px 4px;border-radius:999px;cursor:pointer;box-shadow:4px 4px 0 var(--navy);transition:.15s;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
   .daytab i{width:12px;height:12px;border-radius:50%;border:2px solid var(--navy);flex:none}
   .daytab:hover{transform:translate(1px,1px);box-shadow:3px 3px 0 var(--navy)}
-  .daytab[aria-selected="true"]{background:var(--navy);color:var(--sun)}
+  .daytab[aria-selected="true"]{background:linear-gradient(135deg,#1f918e,#13736f);color:#fff}
   .daytab[aria-selected="true"] i{border-color:var(--sun)}
   /* 已完成：深色半透明遮罩 + ✓（inset:0 避免遮罩撐出按鈕造成文字被判定裁切）；選取中的已完成分頁不加遮罩，只保留 ✓ */
   .daytab.done::after{content:"";position:absolute;inset:0;border-radius:999px;background:rgba(0,0,0,.45);pointer-events:none}
@@ -116,18 +116,18 @@
 
   /* ============ 日期看板 ============ */
   .board{display:grid;grid-template-columns:150px 1fr;background:var(--white);border:var(--bw) solid var(--navy);border-radius:var(--r-md);box-shadow:var(--sh);margin-bottom:34px;overflow:hidden;transform:rotate(-.5deg)}
-  .b-day{display:grid;place-items:center;text-align:center;border-right:4px dashed var(--navy);padding:16px 8px;background:var(--c)}
+  .b-day{display:grid;place-items:center;text-align:center;border-right:4px dashed var(--navy);padding:16px 8px;background:linear-gradient(160deg,rgba(255,255,255,.4),rgba(255,255,255,0) 55%,rgba(0,0,0,.12)),var(--c)}
   .b-day small{letter-spacing:.3em;font-size:12px;display:block;background:var(--white);border:2px solid var(--navy);border-radius:999px;padding:0 6px 0 calc(6px + .3em);line-height:1.5}
   .b-day b{display:block;font-size:60px;line-height:1;color:#fff;-webkit-text-stroke:2.5px var(--navy);paint-order:stroke fill;text-shadow:3px 3px 0 var(--navy)}
   .b-body{padding:18px 24px;display:flex;flex-direction:column;justify-content:center;gap:8px}
   .b-tags{display:flex;gap:8px;flex-wrap:wrap}
-  .tag{display:inline-block;background:var(--sun);border:2px solid var(--navy);font-size:13px;padding:0 12px;border-radius:4px;font-weight:800}
-  .tag.day{background:var(--navy);color:var(--sun)}
+  .tag{display:inline-block;background:linear-gradient(135deg,#ffe08a,var(--sun));border:2px solid var(--navy);font-size:13px;padding:0 12px;border-radius:4px;font-weight:800}
+  .tag.day{background:linear-gradient(135deg,#1c6b6c,var(--navy));color:var(--sun)}
   .b-body h3{font-size:22px}
   .b-body p{font-size:14px;font-weight:500}
 
   /* ============ 手繪路線地圖 ============ */
-  .mapwrap{border:var(--bw) solid var(--navy);border-radius:var(--r-lg);overflow:hidden;box-shadow:9px 9px 0 var(--navy);background:var(--map-sea);position:relative;aspect-ratio:10/7;margin-bottom:12px}
+  .mapwrap{border:var(--bw) solid var(--navy);border-radius:var(--r-lg);overflow:hidden;box-shadow:9px 9px 0 var(--navy);background:linear-gradient(160deg,#d8f6f2,var(--map-sea) 45%,#9fe3dc);position:relative;aspect-ratio:10/7;margin-bottom:12px}
   .mapwrap svg{display:block;width:100%;height:100%}
   .cap{position:absolute;left:12px;bottom:10px;font-size:11px;background:rgba(255,255,255,.88);padding:1px 10px;border-radius:999px;font-weight:600}
   .mapwrap .compass{position:absolute;right:12px;top:12px;width:54px;height:54px;pointer-events:none}
@@ -144,17 +144,17 @@
   .stop{display:grid;grid-template-columns:78px 1fr 170px;background:var(--white);border:var(--bw) solid var(--navy);border-radius:var(--r-md);box-shadow:6px 6px 0 var(--navy);overflow:hidden;scroll-margin-top:20px;transition:box-shadow .3s,transform .3s}
   .stop.flash{animation:flash 1.4s ease}
   @keyframes flash{0%,60%{box-shadow:6px 6px 0 var(--navy),0 0 0 6px var(--sun)}100%{box-shadow:6px 6px 0 var(--navy)}}
-  .s-no{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 6px;border-right:3px dashed var(--navy);background:repeating-linear-gradient(180deg,transparent 0 14px,rgba(11,61,92,.05) 14px 15px)}
+  .s-no{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 6px;border-right:3px dashed var(--navy);background:repeating-linear-gradient(180deg,transparent 0 14px,rgba(14,75,77,.05) 14px 15px)}
   .s-no b{width:44px;height:44px;border-radius:50%;background:var(--c);border:3px solid var(--navy);color:#fff;display:grid;place-items:center;font-size:20px;-webkit-text-stroke:1px var(--navy);paint-order:stroke fill}
-  .s-time{background:var(--sun);color:var(--navy);border:3px solid var(--navy);border-radius:8px;font-size:14px;padding:3px 7px;text-align:center;line-height:1.3;font-weight:900;box-shadow:2px 2px 0 var(--navy);display:flex;align-items:center;gap:3px;white-space:nowrap}
-  .s-time .clk{font-size:12px}
+  .s-time{background:var(--sun);color:var(--navy);border:3px solid var(--navy);border-radius:8px;font-size:13px;padding:4px 4px;text-align:center;line-height:1.25;font-weight:900;box-shadow:2px 2px 0 var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box;max-width:100%;min-width:0;overflow-wrap:anywhere}
+  .s-time .clk{width:17px;height:17px;flex:none}
   .s-main{padding:16px 20px;min-width:0}
   .s-main h3{font-size:19px;line-height:1.45;margin-bottom:8px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
-  .s-main h3 a{border-bottom:3px solid var(--sky)}
-  .s-main h3 a:hover{border-color:var(--coral)}
+  .s-main h3 a{border-bottom:3px solid var(--sky);transition:border-color .2s}
+  .s-main h3 a:hover,.s-main h3 a:focus-visible{border-color:var(--c,var(--coral))}
   .s-main h3 a::after{content:" ↗";font-size:14px;color:var(--sea-ink)}
   .s-info{display:grid;gap:2px}
-  .s-info div{display:grid;grid-template-columns:70px 1fr;gap:8px;border-top:2px dotted rgba(11,61,92,.3);padding:4px 0;font-size:14px}
+  .s-info div{display:grid;grid-template-columns:70px 1fr;gap:8px;border-top:2px dotted rgba(14,75,77,.3);padding:4px 0;font-size:14px}
   .s-info dt{font-size:12px;color:var(--coral-ink);font-weight:800;padding-top:2px}
   .s-info dd{margin:0;font-weight:500;overflow-wrap:anywhere}
   .s-info dd a{color:var(--sea-ink);border-bottom:2px solid currentColor;font-weight:700}
@@ -166,7 +166,7 @@
   /* ============ 集章 ============ */
   .rally{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;justify-items:center;background:var(--white);border:var(--bw) solid var(--navy);border-radius:20px;padding:26px 16px;box-shadow:var(--sh)}
   /* 未蓋章：灰色虛線框、灰色字（仍可讀）；蓋章後：亮色雙線框 + 深色同色系文字 */
-  .rs{width:112px;height:112px;border-radius:50%;border:4px dashed rgba(11,61,92,.28);color:#5f7380;display:grid;place-items:center;text-align:center;font-size:15px;line-height:1.25;transition:.4s}
+  .rs{width:112px;height:112px;border-radius:50%;border:4px dashed rgba(14,75,77,.28);color:#5f7380;display:grid;place-items:center;text-align:center;font-size:15px;line-height:1.25;transition:.4s}
   .rs small{display:block;font-size:11px;letter-spacing:.15em}
   .rs.got{border:4px double var(--c);color:var(--ink);transform:rotate(var(--r))}
   .hint{text-align:center;font-size:13px;margin-top:14px;font-weight:500}
@@ -182,7 +182,7 @@
   .mini-av{width:22px;height:22px;border-radius:50%;border:2px solid var(--navy);display:inline-grid;place-items:center;font-size:11px;color:#fff;font-weight:800;flex:none}
 
   /* ============ 行程點評分 ============ */
-  .s-rate{display:grid;grid-template-columns:70px 1fr;gap:8px;border-top:2px dotted rgba(11,61,92,.3);padding:6px 0 0;margin-top:2px;font-size:14px}
+  .s-rate{display:grid;grid-template-columns:70px 1fr;gap:8px;border-top:2px dotted rgba(14,75,77,.3);padding:6px 0 0;margin-top:2px;font-size:14px}
   .s-rate .lbl{font-size:12px;color:var(--coral-ink);font-weight:800;padding-top:6px}
   .s-rate .groups{display:flex;flex-wrap:wrap;gap:4px 18px}
   .rp{display:flex;align-items:center;gap:8px}
@@ -195,7 +195,7 @@
   .mh .en{display:inline-block;background:var(--sun);border:3px solid var(--navy);padding:0 14px;font-size:18px;transform:rotate(-3deg);box-shadow:3px 3px 0 var(--navy)}
   .mh h3{font-size:22px;letter-spacing:.06em}
   .mh p{font-size:13px;font-weight:500;flex-basis:100%}
-  .mrow{display:grid;grid-template-columns:1fr 150px 108px;column-gap:14px;row-gap:8px;align-items:center;padding:12px 0;border-top:2px dashed rgba(11,61,92,.35)}
+  .mrow{display:grid;grid-template-columns:1fr 150px 108px;column-gap:14px;row-gap:8px;align-items:center;padding:12px 0;border-top:2px dashed rgba(14,75,77,.35)}
   .mrow .who{display:flex;align-items:center;gap:8px;font-size:15px}
   .mrow .who .mini-av{width:28px;height:28px;font-size:13px}
   .mrow .stars{display:flex;justify-content:center;align-items:center;gap:2px}
@@ -205,14 +205,14 @@
   .mrow .fav{grid-column:1/-1;font-size:14px;font-weight:500;background:var(--note);border:2px dashed var(--navy);border-radius:12px;padding:6px 12px;white-space:pre-wrap;overflow-wrap:anywhere}
   .mrow .fav b{display:block;font-size:12px;letter-spacing:.15em;color:var(--coral-ink)}
   .btn.rate{padding:4px 18px;font-size:14px;background:var(--sun);color:var(--navy);box-shadow:3px 3px 0 var(--navy)}
-  .sync{font-size:12px;font-weight:500;margin-top:10px;display:flex;gap:8px;align-items:center;border-top:2px dotted rgba(11,61,92,.3);padding-top:10px}
+  .sync{font-size:12px;font-weight:500;margin-top:10px;display:flex;gap:8px;align-items:center;border-top:2px dotted rgba(14,75,77,.3);padding-top:10px}
   .sync i{width:10px;height:10px;border-radius:50%;background:#b8b8b8;border:2px solid var(--navy);flex:none}
   .sync[data-s="ok"] i{background:#4cb56f}
   .sync[data-s="syncing"] i,.sync[data-s="sending"] i,.sync[data-s="pending"] i{background:var(--sun)}
   .sync[data-s="offline"] i,.sync[data-s="error"] i,.sync[data-s="oldscript"] i{background:var(--coral)}
 
   /* ============ 浮動填寫視窗 ============ */
-  .modal{position:fixed;inset:0;z-index:40;background:rgba(11,61,92,.55);display:grid;place-items:center;padding:16px;overflow-y:auto}
+  .modal{position:fixed;inset:0;z-index:40;background:rgba(14,75,77,.55);display:grid;place-items:center;padding:16px;overflow-y:auto}
   .m-card{width:min(460px,100%);background:var(--white);border:var(--bw) solid var(--navy);border-radius:18px;box-shadow:8px 8px 0 var(--navy);padding:22px 20px 18px}
   .m-card .en{font-size:18px;color:var(--coral-ink)}
   .m-card h3{font-size:21px;margin:2px 0 4px}
@@ -276,7 +276,13 @@
     .s-rate{grid-template-columns:1fr;gap:0}
     .s-rate .lbl{padding-top:0}
   }
-  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.landing{transition:none}.welcome,.welcome *{transition:none}}
+  /* ============ 回到頂部 ============ */
+  .totop{position:fixed;right:18px;bottom:18px;z-index:30;width:52px;height:52px;padding:0;border-radius:50%;border:3px solid var(--navy);background:linear-gradient(135deg,#ff9a2e 0%,#f57c10 60%,#d45a00 100%);box-shadow:4px 4px 0 var(--navy);cursor:pointer;display:grid;place-items:center;opacity:0;visibility:hidden;transform:translateY(12px);transition:opacity .25s,transform .25s,visibility .25s,box-shadow .15s}
+  .totop.show{opacity:1;visibility:visible;transform:none}
+  .totop:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--navy)}
+  .totop svg{width:24px;height:24px}
+  @media(max-width:640px){.totop{right:12px;bottom:12px;width:46px;height:46px}}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.totop{transition:none}.landing{transition:none}.welcome,.welcome *{transition:none}}
 </style>
 </head>
 <body>
@@ -284,13 +290,13 @@
 <!-- ========== 開場頁 ========== -->
 <div class="landing" id="landing" hidden>
   <div class="l-card" role="dialog" aria-modal="true" aria-labelledby="l-title">
-    <svg class="l-stamp" viewBox="0 0 112 132" aria-hidden="true"><rect width="112" height="132" fill="#fff"/><rect x="5" y="5" width="102" height="122" fill="none" stroke="#fff1d6" stroke-width="8" stroke-dasharray="0 12" stroke-linecap="round"/><rect x="14" y="14" width="84" height="104" fill="#8fd8f5" stroke="#0b3d5c" stroke-width="3"/><rect x="14" y="72" width="84" height="46" fill="#1fa6b8"/><circle cx="72" cy="42" r="12" fill="#ffc83d"/><path d="M14 90 L98 70" stroke="#fff" stroke-width="5"/><text x="56" y="112" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">¥ 宮古</text></svg>
+    <svg class="l-stamp" viewBox="0 0 112 132" aria-hidden="true"><rect width="112" height="132" fill="#fff"/><rect x="5" y="5" width="102" height="122" fill="none" stroke="#eefaf8" stroke-width="8" stroke-dasharray="0 12" stroke-linecap="round"/><rect x="14" y="14" width="84" height="104" fill="#b8ece6" stroke="#0e4b4d" stroke-width="3"/><rect x="14" y="72" width="84" height="46" fill="#81d8d0"/><circle cx="72" cy="42" r="12" fill="#ffd166"/><path d="M14 90 L98 70" stroke="#fff" stroke-width="5"/><text x="56" y="112" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">¥ 宮古</text></svg>
     <div class="greet">GREETINGS FROM · MIYAKOJIMA</div>
     <h1 id="l-title" tabindex="-1" style="outline:none">你是哪一位旅人？</h1>
     <p class="sub">選好之後，這支手機會記住你（評分時會用到）</p>
     <div class="who" id="who">
-      <button class="whobtn" data-who="Jeffrey"><span class="av" style="background:var(--sea)">J</span><b>我是 Jeffrey</b></button>
-      <button class="whobtn" data-who="Chizumi"><span class="av" style="background:var(--coral)">C</span><b>我是 Chizumi</b></button>
+      <button class="whobtn" data-who="Jeffrey"><span class="av" style="background:var(--jeffrey)">J</span><b>我是 Jeffrey</b></button>
+      <button class="whobtn" data-who="Chizumi"><span class="av" style="background:var(--chizumi)">C</span><b>我是 Chizumi</b></button>
     </div>
     <div class="l-foot">
       <button type="button" class="btn ghost" id="lCancel" hidden>取消</button>
@@ -307,13 +313,13 @@
   <div class="post">
     <div class="letters">
       <div class="greet">GREETINGS FROM · OKINAWA</div>
-      <div class="tile" style="background:#8fd8f5"><svg viewBox="0 0 100 130" preserveAspectRatio="xMidYMid slice"><rect y="75" width="100" height="55" fill="#1fa6b8"/><path d="M0 92 L100 66" stroke="#fff" stroke-width="7"/><circle cx="72" cy="28" r="13" fill="#ffc83d"/></svg><b>宮</b></div>
-      <div class="tile" style="background:#ffd0c4"><svg viewBox="0 0 100 130" preserveAspectRatio="xMidYMid slice"><circle cx="50" cy="90" r="34" fill="#ff6a4d"/><rect y="98" width="100" height="32" fill="#1fa6b8"/><path d="M0 112q12-8 25 0t25 0 25 0 25 0" stroke="#fff" stroke-width="3" fill="none"/></svg><b>古</b></div>
-      <div class="tile" style="background:#bfeee0"><svg viewBox="0 0 100 130" preserveAspectRatio="xMidYMid slice"><path d="M0 130V90q30-30 60-10t40-10v60z" fill="#4cb56f"/><path d="M40 130V70M40 78q-18-10-28 2M40 78q18-12 30 0M40 78q-6-20-20-16M40 78q10-20 24-14" stroke="#0b3d5c" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg><b>島</b></div>
+      <div class="tile" style="background:linear-gradient(180deg,#f4fbf3,#c9eee6)"><svg viewBox="0 0 100 130" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="tg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5dd0c4"/><stop offset="1" stop-color="#23a09c"/></linearGradient></defs><rect y="75" width="100" height="55" fill="url(#tg1)"/><path d="M0 92 L100 66" stroke="#fff" stroke-width="7"/><circle cx="72" cy="28" r="13" fill="#ffd166"/></svg><b>宮</b></div>
+      <div class="tile" style="background:linear-gradient(180deg,#ffb8cc 0%,#ffd0b8 45%,#ffe9a0 80%)"><svg viewBox="0 0 100 130" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="tg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fe0d2"/><stop offset="1" stop-color="#1b8f92"/></linearGradient></defs><circle cx="50" cy="90" r="34" fill="#ff9a3c"/><rect y="98" width="100" height="32" fill="url(#tg2)"/><path d="M0 112q12-8 25 0t25 0 25 0 25 0" stroke="#fff" stroke-width="3" fill="none"/></svg><b>古</b></div>
+      <div class="tile" style="background:linear-gradient(180deg,#0d2b4a,#1d5a78)"><svg viewBox="0 0 100 130" preserveAspectRatio="xMidYMid slice"><g fill="#fff"><circle cx="14" cy="16" r="1.4"/><circle cx="34" cy="10" r="1"/><circle cx="50" cy="26" r="1.3"/><circle cx="22" cy="40" r="1"/><circle cx="88" cy="46" r="1.2"/><circle cx="60" cy="8" r="1"/><circle cx="8" cy="58" r="1"/><circle cx="92" cy="12" r="1.3"/></g><path d="M74 14a12 12 0 1 0 9 21a9.5 9.5 0 0 1 -9 -21z" fill="#fff0b0"/><path d="M0 130V116C20 84 80 84 100 116V130z" fill="#1b6070"/><path d="M62 101L71 86 80 101z" fill="#ffd166" stroke="#0e4b4d" stroke-width="2" stroke-linejoin="round"/><path d="M68.5 101L71 93 73.5 101z" fill="#0e4b4d"/></svg><b>島</b></div>
     </div>
     <div class="msg">
-      <svg class="stamp" viewBox="0 0 112 132" aria-hidden="true"><rect width="112" height="132" fill="#fff"/><rect x="5" y="5" width="102" height="122" fill="none" stroke="#fff1d6" stroke-width="8" stroke-dasharray="0 12" stroke-linecap="round"/><rect x="14" y="14" width="84" height="104" fill="#8fd8f5" stroke="#0b3d5c" stroke-width="3"/><rect x="14" y="72" width="84" height="46" fill="#1fa6b8"/><circle cx="72" cy="42" r="12" fill="#ffc83d"/><path d="M14 90 L98 70" stroke="#fff" stroke-width="5"/><text x="56" y="112" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">¥ 宮古</text></svg>
-      <svg class="postmark" viewBox="0 0 130 130" fill="none" stroke="#0b3d5c" stroke-width="2.5" aria-hidden="true"><circle cx="65" cy="65" r="52"/><circle cx="65" cy="65" r="40"/><text x="65" y="62" text-anchor="middle" font-size="12" fill="#0b3d5c" stroke="none" font-weight="800">MIYAKO</text><text x="65" y="78" text-anchor="middle" font-size="10" fill="#0b3d5c" stroke="none">2026.10.02</text><path d="M88 40 q10 5 20 0 M88 54 q10 5 20 0 M88 68 q10 5 20 0"/></svg>
+      <svg class="stamp" viewBox="0 0 112 132" aria-hidden="true"><rect width="112" height="132" fill="#fff"/><rect x="5" y="5" width="102" height="122" fill="none" stroke="#eefaf8" stroke-width="8" stroke-dasharray="0 12" stroke-linecap="round"/><rect x="14" y="14" width="84" height="104" fill="#b8ece6" stroke="#0e4b4d" stroke-width="3"/><rect x="14" y="72" width="84" height="46" fill="#81d8d0"/><circle cx="72" cy="42" r="12" fill="#ffd166"/><path d="M14 90 L98 70" stroke="#fff" stroke-width="5"/><text x="56" y="112" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">¥ 宮古</text></svg>
+      <svg class="postmark" viewBox="0 0 130 130" fill="none" stroke="#0e4b4d" stroke-width="2.5" aria-hidden="true"><circle cx="65" cy="65" r="52"/><circle cx="65" cy="65" r="40"/><text x="65" y="62" text-anchor="middle" font-size="12" fill="#0e4b4d" stroke="none" font-weight="800">MIYAKO</text><text x="65" y="78" text-anchor="middle" font-size="10" fill="#0e4b4d" stroke="none">2026.10.02</text><path d="M88 40 q10 5 20 0 M88 54 q10 5 20 0 M88 68 q10 5 20 0"/></svg>
       <div class="intro">
         <div class="script" style="font-size:24px;color:var(--coral-ink)">Dear traveler,</div>
         <h1 style="font-size:15px;font-weight:500;margin-top:6px">宮古島 6 天 5 夜旅行手冊。一起去看看那片藍得不真實的海。</h1>
@@ -348,6 +354,7 @@
 
 <div class="modal" id="modal" hidden></div>
 
+<button class="totop" id="toTop" type="button" aria-label="回到頂部"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 <script src="config.js"></script>
 <script src="itinerary.js"></script>
 <script>
@@ -355,10 +362,10 @@
   "use strict";
 
   /* ---------- 小工具 ---------- */
-  const DAY_COLORS = ["#ff6a4d","#1a8fd0","#e8a70f","#2f9a5a","#8a5cc7","#1fa6b8"];
-  const DAY_INKS = ["#c4401f","#15699c","#8a5c00","#1e7042","#6d3fae","#0f7482"]; // 同色系深色版：白底文字 ≥ 4.5:1
+  const DAY_COLORS = ["#ff7f8f","#5b8def","#f29a1f","#2f9a5a","#a97be0","#1fa6b8"];
+  const DAY_INKS = ["#c23a55","#3a62c4","#8f5200","#1e7042","#6d4fc0","#0f7482"]; // 同色系深色版：白底文字 ≥ 4.5:1
   const WEEK = ["日","一","二","三","四","五","六"];
-  const PEOPLE = { Jeffrey:{c:"var(--sea)",i:"J"}, Chizumi:{c:"var(--coral)",i:"C"} };
+  const PEOPLE = { Jeffrey:{c:"var(--jeffrey)",i:"J"}, Chizumi:{c:"var(--chizumi)",i:"C"} };
   const WHO_KEY = "miyako.who";
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -540,7 +547,7 @@
       </div>
       <div class="mapwrap" id="mapwrap">
         <svg id="map" role="group" aria-label="第 ${cur+1} 天手繪路線圖，共 ${located} 個地點"></svg>
-        <svg class="compass" viewBox="-50 -62 100 112" aria-hidden="true"><circle r="40" fill="#fff" stroke="#0b3d5c" stroke-width="4"/><path d="M0 -34L8 0 0 34-8 0Z" fill="#ff6a4d" stroke="#0b3d5c" stroke-width="2.5"/><path d="M-34 0L0 -8 34 0 0 8Z" fill="#fff" stroke="#0b3d5c" stroke-width="2.5"/><text y="-46" text-anchor="middle" font-size="16" font-weight="800" fill="#0b3d5c">N</text></svg>
+        <svg class="compass" viewBox="-50 -62 100 112" aria-hidden="true"><circle r="40" fill="#fff" stroke="#0e4b4d" stroke-width="4"/><path d="M0 -34L8 0 0 34-8 0Z" fill="#ff7f8f" stroke="#0e4b4d" stroke-width="2.5"/><path d="M-34 0L0 -8 34 0 0 8Z" fill="#fff" stroke="#0e4b4d" stroke-width="2.5"/><text y="-46" text-anchor="middle" font-size="16" font-weight="800" fill="#0e4b4d">N</text></svg>
         <div class="cap">※ 手繪示意圖，位置與比例僅供參考</div>
       </div>
       ${unknown.length ? `<p class="mapnote"><b>地點未定，未標在地圖上：</b>${unknown.map(x => `<span>${x.n} ${esc(x.s.name)}</span>`).join("")}</p>` : `<div style="height:22px"></div>`}
@@ -557,7 +564,7 @@
     const rows = [["預約資訊", s.reservation], ["營業時間", s.hours], ["電話", s.phone], ["備註", s.note], ["推薦文章", s.article]];
     return `
       <article class="stop" id="stop-${s.id}" data-id="${s.id}">
-        <div class="s-no"><b aria-label="第 ${n} 站">${n}</b>${s.time ? `<span class="s-time"><span class="clk" aria-hidden="true">⏰</span>${esc(s.time)}</span>` : ""}</div>
+        <div class="s-no"><b aria-label="第 ${n} 站">${n}</b>${s.time ? `<span class="s-time"><svg class="clk" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="#fff" stroke="var(--navy)" stroke-width="2.4"/><path d="M10 5.2V10l3.2 2" fill="none" stroke="var(--navy)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>${esc(s.time)}</span>` : ""}</div>
         <div class="s-main">
           <h3>${name}${s.type === "hotel" ? ` <span class="tag">住宿</span>` : ""}</h3>
           <dl class="s-info">${rows.map(r => `<div><dt>${r[0]}</dt><dd>${rich(r[1])}</dd></div>`).join("")}</dl>
@@ -711,21 +718,21 @@
       <rect x="${vb.x - vb.w}" y="${vb.y - vb.h}" width="${vb.w*3}" height="${vb.h*3}" fill="var(--map-sea)"/>
       <rect x="${vb.x - vb.w}" y="${vb.y - vb.h}" width="${vb.w*3}" height="${vb.h*3}" fill="url(#wv)"/>
       </g>
-      <g aria-hidden="true" fill="rgba(11,61,92,.25)" transform="translate(${px(7)} ${px(7)})">${land.map(d => `<path d="${d}"/>`).join("")}</g>
+      <g aria-hidden="true" fill="rgba(14,75,77,.25)" transform="translate(${px(7)} ${px(7)})">${land.map(d => `<path d="${d}"/>`).join("")}</g>
       <g aria-hidden="true" stroke="#fff" stroke-width="${px(9)}" stroke-linecap="round">${BRIDGES.map(b => { const a = P(...b[0]), z = P(...b[1]); return `<path d="M${a[0]} ${a[1]}L${z[0]} ${z[1]}"/>`; }).join("")}</g>
       <g aria-hidden="true" stroke="var(--navy)" stroke-width="${px(2.5)}" stroke-dasharray="${px(1)} ${px(5)}" stroke-linecap="round">${BRIDGES.map(b => { const a = P(...b[0]), z = P(...b[1]); return `<path d="M${a[0]} ${a[1]}L${z[0]} ${z[1]}"/>`; }).join("")}</g>
       <g aria-hidden="true" fill="var(--map-land)" stroke="var(--navy)" stroke-width="${px(3.5)}" stroke-linejoin="round">${land.map(d => `<path d="${d}"/>`).join("")}</g>
       <g aria-hidden="true" fill="url(#dots)">${land.map(d => `<path d="${d}"/>`).join("")}</g>
       <g aria-hidden="true" fill="#4cb56f" stroke="var(--navy)" stroke-width="${px(2)}">${TREES.map(t => { const p = P(...t); return `<circle cx="${p[0]}" cy="${p[1]}" r="${px(7)}"/>`; }).join("")}</g>
       <g aria-hidden="true" class="places" font-weight="800" fill="var(--navy)" opacity=".75" font-family="var(--font)">${labelsSvg.join("")}</g>
-      ${route ? `<g aria-hidden="true"><path class="route" d="${route}" stroke="rgba(11,61,92,.35)" stroke-width="${px(9)}"/>
+      ${route ? `<g aria-hidden="true"><path class="route" d="${route}" stroke="rgba(14,75,77,.35)" stroke-width="${px(9)}"/>
       <path class="route" d="${route}" stroke="${c}" stroke-width="${px(5)}" stroke-dasharray="${px(2)} ${px(12)}">${REDUCED ? "" : `<animate attributeName="stroke-dashoffset" from="0" to="${-14*u}" dur="1.2s" repeatCount="indefinite"/>`}</path></g>` : ""}
       <g id="pins">${pts.map(q => { const [dx, dy] = q.off, moved = dx || dy; return `
         <g class="pin" tabindex="0" role="button" aria-label="第 ${q.n} 站 ${esc(q.s.name)}，看詳細資訊" data-id="${q.s.id}" transform="translate(${q.p[0]} ${q.p[1]}) scale(${u})">
           ${moved ? `<path class="leader" d="M0 0L${dx} ${dy}" fill="none" stroke="var(--navy)" stroke-width="2.5" stroke-dasharray="1 5" stroke-linecap="round"/>
           <circle class="spot" r="5" fill="${c}" stroke="var(--navy)" stroke-width="2.5"/>` : ""}
           <g class="head" id="head-${q.s.id}" transform="translate(${dx} ${dy})">
-            <ellipse cy="2" rx="11" ry="4" fill="rgba(11,61,92,.3)"/>
+            <ellipse cy="2" rx="11" ry="4" fill="rgba(14,75,77,.3)"/>
             <path class="body" fill="${c}" stroke="var(--navy)" stroke-width="3" d="M0 0C-12-15-16-26-16-31a16 16 0 1 1 32 0c0 5-4 16-16 31z"/>
             <text y="-25" font-size="15">${q.n}</text>
           </g>
@@ -1163,6 +1170,31 @@
   }
   window.addEventListener("hashchange", () => { const h = location.hash.match(/^#day([1-9]\d?)$/); if (h && +h[1] <= DAYS.length) selectDay(+h[1] - 1, false); });
 })();
+</script>
+<script>
+  /* 回到頂部：往下捲超過 400px 才顯示，點擊後以動畫慢慢往上捲（不依賴瀏覽器 smooth，避免被系統的「減少動態效果」變成直接跳） */
+  (() => {
+    const btn = document.getElementById("toTop");
+    let raf = 0, prev = "";
+    const root = document.documentElement;
+    const stop = () => { if (!raf) return; cancelAnimationFrame(raf); raf = 0; root.style.scrollBehavior = prev; };
+    const onScroll = () => btn.classList.toggle("show", window.scrollY > 400);
+    addEventListener("scroll", onScroll, { passive: true });
+    ["wheel", "touchstart", "keydown"].forEach(e => addEventListener(e, stop, { passive: true }));
+    btn.addEventListener("click", () => {
+      stop();
+      const from = window.scrollY, dur = Math.min(1200, Math.max(500, from * 0.35)), t0 = performance.now();
+      prev = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto"; // 避免和 CSS 的 smooth 疊加造成卡頓
+      const step = now => {
+        const p = Math.min(1, (now - t0) / dur), k = 1 - Math.pow(1 - p, 3); // easeOutCubic
+        window.scrollTo(0, from * (1 - k));
+        if (p < 1 && raf) raf = requestAnimationFrame(step); else { raf = 0; root.style.scrollBehavior = prev; }
+      };
+      raf = requestAnimationFrame(step);
+    });
+    onScroll();
+  })();
 </script>
 </body>
 </html>

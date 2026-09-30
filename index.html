@@ -379,7 +379,39 @@
   const navUrl = s => `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=driving&dir_action=navigate`;
   function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch(e){ return null; } }
 
-  const DAYS = TRIP.days;
+  /* ---------- 行程資料 ----------
+     優先順序：上次從試算表抓到、存在這支手機的行程 → itinerary.js（內建備份）。
+     畫面先用這份畫出來，之後再到 Apps Script 抓最新的行程（見最下方「行程更新」）。 */
+  const TRIP_KEY = "miyako.trip.v1";
+  const isDateStr = s => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  const optStr = v => (typeof v === "string" && v.trim() !== "") ? v : null;
+  const optNum = v => (typeof v === "number" && isFinite(v)) ? v : null;
+  // 檢查並整理行程資料；格式不對回傳 null（不採用）
+  function normalizeTrip(t){
+    if (!t || !Array.isArray(t.days) || !t.days.length) return null;
+    const ids = new Set(), dates = new Set(), days = [];
+    for (const d of t.days) {
+      if (!d || !isDateStr(d.date) || dates.has(d.date) || !Array.isArray(d.stops)) return null;
+      dates.add(d.date);
+      const stops = [];
+      for (const s of d.stops) {
+        if (!s || !(Number.isInteger(s.id) && s.id > 0) || ids.has(s.id) || typeof s.name !== "string" || !s.name) return null;
+        ids.add(s.id);
+        const lat = optNum(s.lat), lng = optNum(s.lng), ok = lat !== null && lng !== null;
+        stops.push({ id: s.id, type: s.type === "hotel" ? "hotel" : undefined, time: optStr(s.time), name: s.name,
+          lat: ok ? lat : null, lng: ok ? lng : null, mapUrl: optStr(s.mapUrl), address: optStr(s.address), hours: optStr(s.hours),
+          phone: optStr(s.phone), reservation: optStr(s.reservation), article: optStr(s.article), note: optStr(s.note) });
+      }
+      days.push({ date: d.date, title: optStr(d.title), stops });
+    }
+    return { days };
+  }
+  let DAYS = (() => {
+    const FROM_SHEET = typeof CONFIG !== "undefined" && CONFIG.TRIP_FROM_SHEET && CONFIG.SCRIPT_URL;
+    if (FROM_SHEET) { try { const t = normalizeTrip(JSON.parse(localStorage.getItem(TRIP_KEY))); if (t) return t.days; } catch(e){} }
+    return normalizeTrip(TRIP).days;
+  })();
+  const dayColor = i => DAY_COLORS[i % DAY_COLORS.length], dayInk = i => DAY_INKS[i % DAY_INKS.length];
   const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- 使用者身分 ---------- */
@@ -451,23 +483,27 @@
 
   /* ---------- 分頁 ---------- */
   const tabs = $("#dayTabs"), panel = $("#dayPanel");
-  tabs.innerHTML = DAYS.map((d, i) => {
-    const l = label(d);
-    return `<button class="daytab" role="tab" id="tab-${i}" aria-controls="dayPanel" aria-selected="false" tabindex="-1" data-i="${i}"><i style="background:${DAY_COLORS[i]}"></i>${l.md}(${l.wk})</button>`;
-  }).join("");
-  const tabBtns = [...tabs.querySelectorAll(".daytab")];
-  tabBtns.forEach(b => {
-    b.onclick = () => selectDay(+b.dataset.i, true);
-    b.onkeydown = e => {
-      const i = +b.dataset.i;
-      let n = null;
-      if (e.key === "ArrowRight") n = (i + 1) % DAYS.length;
-      if (e.key === "ArrowLeft") n = (i - 1 + DAYS.length) % DAYS.length;
-      if (e.key === "Home") n = 0;
-      if (e.key === "End") n = DAYS.length - 1;
-      if (n !== null) { e.preventDefault(); selectDay(n, true); tabBtns[n].focus(); }
-    };
-  });
+  let tabBtns = [];
+  function buildTabs(){
+    tabs.innerHTML = DAYS.map((d, i) => {
+      const l = label(d);
+      return `<button class="daytab" role="tab" id="tab-${i}" aria-controls="dayPanel" aria-selected="false" tabindex="-1" data-i="${i}"><i style="background:${dayColor(i)}"></i>${l.md}(${l.wk})</button>`;
+    }).join("");
+    tabBtns = [...tabs.querySelectorAll(".daytab")];
+    tabBtns.forEach(b => {
+      b.onclick = () => selectDay(+b.dataset.i, true);
+      b.onkeydown = e => {
+        const i = +b.dataset.i;
+        let n = null;
+        if (e.key === "ArrowRight") n = (i + 1) % DAYS.length;
+        if (e.key === "ArrowLeft") n = (i - 1 + DAYS.length) % DAYS.length;
+        if (e.key === "Home") n = 0;
+        if (e.key === "End") n = DAYS.length - 1;
+        if (n !== null) { e.preventDefault(); selectDay(n, true); tabBtns[n].focus(); }
+      };
+    });
+  }
+  buildTabs();
 
   // 頁內連結（每日行程／集章）用 JS 捲動，不改網址的 #dayN，重新整理後還是停在同一天
   document.querySelectorAll('a[href="#days"], a[href="#rally"]').forEach(a => a.addEventListener("click", e => {
@@ -489,7 +525,7 @@
 
   /* ---------- 單日頁面 ---------- */
   function renderDay(){
-    const day = DAYS[cur], l = label(day), c = DAY_COLORS[cur];
+    const day = DAYS[cur], l = label(day), c = dayColor(cur);
     const located = day.stops.filter(hasLoc).length;
     const unknown = day.stops.map((s, k) => ({ s, n: k + 1 })).filter(x => !hasLoc(x.s));
     panel.style.setProperty("--c", c);
@@ -580,7 +616,7 @@
   function drawMap(){
     const svg = $("#map"), wrap = $("#mapwrap");
     if (!svg || !wrap.clientWidth) return;
-    const day = DAYS[cur], c = DAY_COLORS[cur];
+    const day = DAYS[cur], c = dayColor(cur);
     const W = wrap.clientWidth, H = wrap.clientHeight, aspect = W / H;
 
     // 當天有座標的點（編號 = 當天順序）
@@ -714,7 +750,10 @@
 
   /* ---------- 集章（第 3 階段接上今日記憶球後自動蓋章） ---------- */
   const ROT = [-8, 6, -4, 9, -6, 5];
-  $("#rallyBox").innerHTML = DAYS.map((d, i) => { const l = label(d); return `<div class="rs" data-date="${d.date}" data-md="${l.md}" style="--c:${DAY_COLORS[i]};--ink:${DAY_INKS[i]};--r:${ROT[i]}deg" role="img" aria-label="${l.md} 的章，尚未蓋章"><span><small>DAY ${i+1}</small>${l.md}<small>MIYAKO</small></span></div>`; }).join("");
+  function buildRally(){
+    $("#rallyBox").innerHTML = DAYS.map((d, i) => { const l = label(d); return `<div class="rs" data-date="${d.date}" data-md="${l.md}" style="--c:${dayColor(i)};--ink:${dayInk(i)};--r:${ROT[i % ROT.length]}deg" role="img" aria-label="${l.md} 的章，尚未蓋章"><span><small>DAY ${i+1}</small>${l.md}<small>MIYAKO</small></span></div>`; }).join("");
+  }
+  buildRally();
 
   /* =========================================================
      評分：今日記憶球 + 行程點評分
@@ -751,7 +790,9 @@
     });
     saveJSON(RKEY, R); saveJSON(PKEY, pending);
   }
-  const STOP_DATE = {}; DAYS.forEach(d => d.stops.forEach(s => { STOP_DATE[s.id] = { date: d.date, name: s.name }; }));
+  let STOP_DATE = {};
+  function buildStopDate(){ STOP_DATE = {}; DAYS.forEach(d => d.stops.forEach(s => { STOP_DATE[s.id] = { date: d.date, name: s.name }; })); }
+  buildStopDate();
   function deviceName(){ const u = navigator.userAgent || ""; return /iPhone/.test(u) ? "iPhone" : /iPad/.test(u) ? "iPad" : /Android/.test(u) ? "Android" : /Mac/.test(u) ? "Mac" : /Windows/.test(u) ? "Windows" : "其他"; }
 
   function setRating(item){
@@ -960,8 +1001,9 @@
       document.head.appendChild(s);
     });
   }
-  async function fetchAll(){
-    const url = `${CONFIG.SCRIPT_URL}?action=all&t=${Date.now()}`;
+  async function fetchAll(){ return getJSON("all"); }
+  async function getJSON(action){
+    const url = `${CONFIG.SCRIPT_URL}?action=${action}&t=${Date.now()}`;
     let res;
     try { res = await fetch(url, { cache: "no-store" }); }
     catch(e){ return await jsonp(url); } // 跨網域讀取被擋時改用 JSONP
@@ -1066,7 +1108,7 @@
 
   /* ---------- 預設打開哪一天 ---------- */
   function initialDay(){
-    const h = location.hash.match(/^#day([1-9])$/);
+    const h = location.hash.match(/^#day([1-9]\d?)$/);
     if (h && +h[1] <= DAYS.length) return +h[1] - 1;
     const t = new Date(), today = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
     const i = DAYS.findIndex(d => d.date === today);
@@ -1076,11 +1118,50 @@
   renderDone();
   scheduleSync(300);
 
+  /* ---------- 行程更新：從試算表（Apps Script 第 4 版 ?action=trip）抓最新行程 ----------
+     - 載入時抓一次；回到這個分頁、或每 5 分鐘，最多每 2 分鐘抓一次。
+     - 內容有變才重畫，並停在原本那一天；抓到的行程存在這支手機，離線時也能看。
+     - Apps Script 還是舊版、連不到、或資料格式不對：繼續用現在的行程。 */
+  const TRIP_ON = !!(typeof CONFIG !== "undefined" && CONFIG.TRIP_FROM_SHEET && CONFIG.SCRIPT_URL);
+  let tripAt = 0, tripBusy = false;
+  function applyTrip(days){
+    const curDate = DAYS[cur] && DAYS[cur].date, act = document.activeElement, tabFocused = !!(act && tabs.contains(act));
+    DAYS = days;
+    buildStopDate(); buildTabs(); buildRally();
+    let i = DAYS.findIndex(d => d.date === curDate);
+    if (i < 0) i = Math.min(cur, DAYS.length - 1);
+    selectDay(i, false);
+    renderDone();
+    if (tabFocused) tabBtns[i].focus({ preventScroll: true });
+  }
+  async function updateTrip(force){
+    if (!TRIP_ON || tripBusy || !navigator.onLine) return;
+    if (!force && Date.now() - tripAt < 120000) return;
+    tripBusy = true; tripAt = Date.now();
+    try {
+      const d = await getJSON("trip");
+      if (!d || d.__notJson || !d.ok || !(d.version >= 4)) return;
+      if (Array.isArray(d.warnings) && d.warnings.length) console.warn("行程試算表有問題的列（已略過）：", d.warnings);
+      const t = normalizeTrip(d.trip);
+      if (!t) { console.warn("行程試算表的資料不完整，繼續使用目前的行程"); return; }
+      try { localStorage.setItem(TRIP_KEY, JSON.stringify(t)); } catch(e){}
+      if (JSON.stringify(t.days) !== JSON.stringify(DAYS)) applyTrip(t.days);
+    } catch(e){
+      // 連不到：繼續用目前的行程，下次再試
+    } finally { tripBusy = false; }
+  }
+  if (TRIP_ON) {
+    updateTrip(true);
+    setInterval(() => { if (document.visibilityState === "visible") updateTrip(false); }, 300000);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") updateTrip(false); });
+    window.addEventListener("online", () => updateTrip(false));
+  }
+
   /* ---------- PWA：安裝到主畫面、離線可看 ---------- */
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
     window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
   }
-  window.addEventListener("hashchange", () => { const h = location.hash.match(/^#day([1-9])$/); if (h && +h[1] <= DAYS.length) selectDay(+h[1] - 1, false); });
+  window.addEventListener("hashchange", () => { const h = location.hash.match(/^#day([1-9]\d?)$/); if (h && +h[1] <= DAYS.length) selectDay(+h[1] - 1, false); });
 })();
 </script>
 </body>

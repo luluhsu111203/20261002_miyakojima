@@ -1,16 +1,31 @@
 /**
- * 宮古島行程網站｜評分後端（Google Apps Script）第 3 版
+ * 宮古島行程網站｜行程＋評分後端（Google Apps Script）第 4 版
  * ------------------------------------------------------------
- * 用途：保存兩種評分，讓 Jeffrey 與 Chizumi 的手機可以互相看到。
- *   1. 今日記憶球：每天、每人一列（星數 + 今天最喜歡的部分）
- *   2. 行程點評分：每個行程點、每人一列（只有星數）
+ * 用途：
+ *   A. 行程資料（第 4 版新增）：在試算表的「行程」「每日」兩個工作表編輯，網頁會讀取顯示。
+ *   B. 保存兩種評分，讓 Jeffrey 與 Chizumi 的手機可以互相看到。
+ *     1. 今日記憶球：每天、每人一列（星數 + 今天最喜歡的部分）
+ *     2. 行程點評分：每個行程點、每人一列（只有星數）
  *
  * 部署方式（整份取代舊的 Code.gs）：
- *   1. 貼上這份程式碼並儲存。
- *   2. （建議）在上方選單選擇函式 setup 並按「執行」，會建立兩個工作表、
- *      補上第 3 版新增的「版本碼」欄位並設定格式。
- *   3. 「部署」→「管理部署作業」→ 編輯（鉛筆）→ 版本選「新版本」→ 部署。
+ *   1. 貼上這份程式碼並儲存；另外新增一個指令碼檔案 Seed.gs，貼上 apps-script/Seed.gs。
+ *   2. 在上方選單選擇函式 setup 並按「執行」：建立所有工作表、設定格式，
+ *      並安裝「結構變更」觸發器（拖曳整列調整順序時也會馬上更新）。第一次會要求授權。
+ *   3. 選擇函式 seedItinerary 並按「執行」：把目前網站上的行程匯入「行程」「每日」。
+ *      （只在「行程」工作表還是空的時候會匯入，不會蓋掉已經編輯過的內容。）
+ *   4. 「部署」→「管理部署作業」→ 編輯（鉛筆）→ 版本選「新版本」→ 部署。
  *      網址不會改變，網頁不需要改網址。
+ *   5. 用瀏覽器打開「網址?action=trip」確認看得到行程 JSON，warnings 是空的。
+ *
+ * 行程工作表怎麼改：
+ *   - 「每日」：一列一天（日期、標題），決定有哪幾天、順序和每天的標題。
+ *   - 「行程」：一列一個行程點。同一天的行程點依「由上往下的列順序」顯示，拖曳整列就能調順序。
+ *   - id：行程點固定代號，評分靠它對應。換日期、調順序都「不要改 id」；
+ *         新增行程點請用沒用過的新號碼；不要的行程點勾「隱藏」，不要刪整列（評分會留著）。
+ *   - 沒有的欄位留空白，網頁會顯示「-」。緯度／經度留空＝地點未定（不上地圖、沒有導航按鈕）。
+ *   - 文字欄位可以用 [文字](網址) 寫連結。類型填 hotel 或「住宿」會顯示住宿標籤。
+ *   - 有問題的列（id 重複、日期不在「每日」裡…）會被略過，原因列在 ?action=trip 的 warnings。
+ *   - 改完約幾秒內生效（改儲存格或拖曳列都會清掉快取），最慢 5 分鐘。
  *
  * 寫入（POST，body 用 text/plain 送出 JSON，網頁可以直接讀到回應）：
  *   {"items":[
@@ -27,10 +42,12 @@
  *     試算表有更新的版本，或資料格式錯誤再送也沒用）。
  *
  * 讀取（GET）：?action=all  → 回傳所有評分（JSON，含 rid）
- *            ?action=all&callback=fn → 同上，但包成 fn(...)（JSONP 備案）
+ *            ?action=trip → 回傳行程 {ok, version, trip:{days:[{date,title,stops:[…]}]}, warnings}
+ *            加上 &callback=fn → 同上，但包成 fn(...)（JSONP 備案）
+ *            ?action=trip&nocache=1 → 不用快取，直接讀試算表（除錯用）
  */
 
-var API_VERSION = 3;
+var API_VERSION = 4;
 var PEOPLE = ["Jeffrey", "Chizumi"];
 
 var DAY_SHEET = "今日記憶球";
@@ -39,8 +56,34 @@ var DAY_HEADERS = ["日期", "評分者", "星數", "今天最喜歡的部分", 
 var STOP_SHEET = "行程點評分";
 var STOP_HEADERS = ["行程點 id", "地點名稱", "日期", "評分者", "星數", "更新時間", "裝置", "版本碼"];
 
-// 要設成純文字的欄位：日期避免被轉成日期格式、版本碼避免被轉成數字
-var TEXT_HEADERS = ["日期", "版本碼"];
+// 行程（第 4 版）：一列一個行程點；key 是網頁用的欄位名稱
+var TRIP_SHEET = "行程";
+var TRIP_COLS = [
+  { h: "id",       key: "id" },
+  { h: "日期",     key: "date" },
+  { h: "時間",     key: "time" },
+  { h: "名稱",     key: "name" },
+  { h: "類型",     key: "type" },
+  { h: "緯度",     key: "lat" },
+  { h: "經度",     key: "lng" },
+  { h: "地圖連結", key: "mapUrl" },
+  { h: "地址",     key: "address" },
+  { h: "營業時間", key: "hours" },
+  { h: "電話",     key: "phone" },
+  { h: "預約資訊", key: "reservation" },
+  { h: "推薦文章", key: "article" },
+  { h: "備註",     key: "note" },
+  { h: "隱藏",     key: "hidden" }
+];
+var TRIP_HEADERS = TRIP_COLS.map(function (c) { return c.h; });
+var TRIP_DAYS_SHEET = "每日";
+var TRIP_DAYS_HEADERS = ["日期", "標題"];
+var TRIP_CACHE_KEY = "trip_v4";
+var TRIP_CACHE_SEC = 300;
+
+// 要設成純文字的欄位：日期避免被轉成日期格式、版本碼避免被轉成數字、
+// 時間避免被轉成時間、電話的「+81…」避免被當成公式，其他文字欄位避免被自動轉換
+var TEXT_HEADERS = ["日期", "版本碼", "時間", "名稱", "類型", "地圖連結", "地址", "營業時間", "電話", "預約資訊", "推薦文章", "備註", "標題"];
 
 /* ---------------- 寫入 ---------------- */
 function doPost(e) {
@@ -126,7 +169,127 @@ function doGet(e) {
   if (p.action === "all") {
     return out({ ok: true, version: API_VERSION, days: readDays(), stops: readStops() }, p.callback);
   }
-  return out({ ok: true, version: API_VERSION, message: "OK：Apps Script 第 3 版已部署" }, p.callback);
+  if (p.action === "trip") {
+    var t = getTrip(p.nocache === "1");
+    return out({ ok: true, version: API_VERSION, trip: t.trip, warnings: t.warnings }, p.callback);
+  }
+  return out({ ok: true, version: API_VERSION, message: "OK：Apps Script 第 4 版已部署" }, p.callback);
+}
+
+/* ---------------- 行程 ---------------- */
+// 先看快取；試算表被修改時 onEdit / onTripChange 會清掉快取
+function getTrip(noCache) {
+  var cache = CacheService.getScriptCache();
+  if (!noCache) {
+    var hit = cache.get(TRIP_CACHE_KEY);
+    if (hit) { try { return JSON.parse(hit); } catch (e) {} }
+  }
+  var t = readTrip();
+  try { cache.put(TRIP_CACHE_KEY, JSON.stringify(t), TRIP_CACHE_SEC); } catch (e) { Logger.log(e); }
+  return t;
+}
+
+function clearTripCache() {
+  try { CacheService.getScriptCache().remove(TRIP_CACHE_KEY); } catch (e) {}
+}
+
+// 簡單觸發器：改「行程」「每日」的儲存格時清快取（不需要安裝）
+function onEdit(e) {
+  var name = e && e.range ? e.range.getSheet().getName() : "";
+  if (!name || name === TRIP_SHEET || name === TRIP_DAYS_SHEET) clearTripCache();
+}
+
+// 可安裝觸發器（setup 會安裝）：拖曳整列、插入／刪除列等結構變更不會觸發 onEdit，由這個清快取
+function onTripChange(e) {
+  clearTripCache();
+}
+
+function readTrip() {
+  var warnings = [];
+  var dayList = [], dayMap = {};
+
+  // 每日：決定有哪幾天、順序與標題
+  var dsh = getSheet(TRIP_DAYS_SHEET, TRIP_DAYS_HEADERS), dLast = dsh.getLastRow();
+  if (dLast > 1) {
+    var dVals = dsh.getRange(2, 1, dLast - 1, 2).getValues();
+    var dDisp = dsh.getRange(2, 1, dLast - 1, 2).getDisplayValues();
+    for (var i = 0; i < dVals.length; i++) {
+      var rowNo = i + 2, rawDate = String(dDisp[i][0]).trim();
+      if (!rawDate && !String(dDisp[i][1]).trim()) continue; // 空白列
+      var date = toDate(dVals[i][0], rawDate);
+      if (!date) { warnings.push("每日 第 " + rowNo + " 列：日期「" + rawDate + "」看不懂，請用 2026-10-02 格式"); continue; }
+      if (dayMap[date]) { warnings.push("每日 第 " + rowNo + " 列：日期 " + date + " 重複，已略過"); continue; }
+      var day = { date: date, title: str(dDisp[i][1]), stops: [] };
+      dayMap[date] = day;
+      dayList.push(day);
+    }
+  }
+
+  // 行程：依列順序放進各天
+  var sh = getSheet(TRIP_SHEET, TRIP_HEADERS), last = sh.getLastRow(), n = TRIP_HEADERS.length;
+  var col = {};
+  TRIP_COLS.forEach(function (c, k) { col[c.key] = k; });
+  var seen = {};
+  if (last > 1) {
+    var vals = sh.getRange(2, 1, last - 1, n).getValues();
+    var disp = sh.getRange(2, 1, last - 1, n).getDisplayValues();
+    for (var r = 0; r < vals.length; r++) {
+      var v = vals[r], d = disp[r], no = r + 2;
+      var name = String(d[col.name]).trim(), idText = String(d[col.id]).trim();
+      if (!idText && !name) continue; // 空白列
+      var id = Number(v[col.id]);
+      if (!(id > 0 && Math.floor(id) === id)) { warnings.push("行程 第 " + no + " 列（" + name + "）：id「" + idText + "」要是正整數，已略過"); continue; }
+      if (seen[id]) { warnings.push("行程 第 " + no + " 列（" + name + "）：id " + id + " 跟第 " + seen[id] + " 列重複，已略過"); continue; }
+      seen[id] = no;
+      if (isHidden(v[col.hidden])) continue;
+      if (!name) { warnings.push("行程 第 " + no + " 列（id " + id + "）：沒有名稱，已略過"); continue; }
+      var rawD = String(d[col.date]).trim(), date2 = toDate(v[col.date], rawD);
+      if (!date2 || !dayMap[date2]) {
+        warnings.push("行程 第 " + no + " 列（" + name + "）：日期「" + rawD + "」" + (date2 ? "不在「每日」工作表裡" : "看不懂") + "，已略過");
+        continue;
+      }
+      var stop = { id: id, time: str(d[col.time]), name: name };
+      var type = String(d[col.type]).trim().toLowerCase();
+      if (type === "hotel" || type === "住宿") stop.type = "hotel";
+      var lat = num(v[col.lat]), lng = num(v[col.lng]);
+      var hasLat = String(d[col.lat]).trim() !== "", hasLng = String(d[col.lng]).trim() !== "";
+      if (lat !== null && lng !== null && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) { stop.lat = lat; stop.lng = lng; }
+      else {
+        stop.lat = null; stop.lng = null;
+        if (hasLat || hasLng) warnings.push("行程 第 " + no + " 列（" + name + "）：緯度／經度要兩個都填數字，先當作地點未定");
+      }
+      var url = str(d[col.mapUrl]);
+      if (url && !/^https?:\/\//i.test(url)) { warnings.push("行程 第 " + no + " 列（" + name + "）：地圖連結要用 http(s):// 開頭，已略過連結"); url = null; }
+      stop.mapUrl = url;
+      ["address", "hours", "phone", "reservation", "article", "note"].forEach(function (k) { stop[k] = str(d[col[k]]); });
+      dayMap[date2].stops.push(stop);
+    }
+  }
+  return { trip: { days: dayList }, warnings: warnings };
+}
+
+// 試算表的日期：可能是日期物件或文字（2026-10-02、2026/10/2）→ "yyyy-MM-dd"，看不懂回傳 ""
+function toDate(value, text) {
+  if (value instanceof Date) return norm(value);
+  var m = String(text).trim().match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
+  if (!m) return "";
+  return m[1] + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[3]).slice(-2);
+}
+
+function isHidden(v) {
+  if (v === true) return true;
+  return /^(true|v|x|y|yes|是|隱藏|✓|✔)$/i.test(String(v).trim());
+}
+
+function str(v) {
+  var s = String(v == null ? "" : v).trim();
+  return s ? s : null;
+}
+
+function num(v) {
+  if (v === "" || v === null || v === true || v === false) return null;
+  var x = Number(v);
+  return isFinite(x) ? x : null;
 }
 
 function readDays() {
@@ -202,9 +365,19 @@ function out(obj, callback) {
   return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
 }
 
-// 手動執行一次：建立兩個工作表
+// 手動執行一次：建立所有工作表、設定格式、安裝結構變更觸發器
 function setup() {
   getSheet(DAY_SHEET, DAY_HEADERS);
   getSheet(STOP_SHEET, STOP_HEADERS);
-  Logger.log("完成：已建立「" + DAY_SHEET + "」與「" + STOP_SHEET + "」工作表");
+  getSheet(TRIP_DAYS_SHEET, TRIP_DAYS_HEADERS);
+  var tsh = getSheet(TRIP_SHEET, TRIP_HEADERS);
+  // 「隱藏」欄做成勾選框
+  var hc = TRIP_HEADERS.indexOf("隱藏") + 1;
+  tsh.getRange(2, hc, tsh.getMaxRows() - 1, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build());
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var has = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === "onTripChange"; });
+  if (!has) ScriptApp.newTrigger("onTripChange").forSpreadsheet(ss).onChange().create();
+  clearTripCache();
+  Logger.log("完成：已建立評分與行程工作表" + (has ? "" : "，並安裝結構變更觸發器"));
 }

@@ -335,7 +335,7 @@
 <main>
 <!-- ========== 每日行程 ========== -->
 <section id="days">
-  <div class="head"><span class="en script">Daily Route</span><h2>每日行程</h2><p>點日期切換；點地點名稱看 Google 地圖，按「立即開始導航」從目前位置出發</p></div>
+  <div class="head"><span class="en script">Daily Route</span><h2>每日行程</h2><p id="dayTip"></p></div>
   <div class="daytabs" id="dayTabs" role="tablist" aria-label="選擇日期"></div>
   <div id="dayPanel" role="tabpanel"></div>
 </section>
@@ -362,6 +362,15 @@
   "use strict";
 
   /* ---------- 小工具 ---------- */
+  // 每日行程標題下方的提示語（依目前選擇的天數顯示）
+  const DAY_TIPS = [
+    "出發吧！宮古島的藍色海洋與美好假期，正在等著我們！",
+    "迎著溫柔海風，踏上探索宮古島的第一段冒險！",
+    "帶著期待出門，今天也要收集滿滿的海島回憶！",
+    "追著陽光與海浪，去發現宮古島更多意想不到的驚喜！",
+    "把沿途的美景和歡笑收藏，讓今天的快樂更加難忘！",
+    "珍惜旅程最後一天，帶著滿滿回憶與不捨，和宮古島說再見！"
+  ];
   const DAY_COLORS = ["#ff7f8f","#5b8def","#f29a1f","#2f9a5a","#a97be0","#1fa6b8"];
   const DAY_INKS = ["#c23a55","#3a62c4","#8f5200","#1e7042","#6d4fc0","#0f7482"]; // 同色系深色版：白底文字 ≥ 4.5:1
   const WEEK = ["日","一","二","三","四","五","六"];
@@ -533,6 +542,7 @@
   /* ---------- 單日頁面 ---------- */
   function renderDay(){
     const day = DAYS[cur], l = label(day), c = dayColor(cur);
+    $("#dayTip").textContent = DAY_TIPS[cur] || "";
     const located = day.stops.filter(hasLoc).length;
     const unknown = day.stops.map((s, k) => ({ s, n: k + 1 })).filter(x => !hasLoc(x.s));
     panel.style.setProperty("--c", c);

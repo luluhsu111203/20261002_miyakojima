@@ -132,17 +132,15 @@
   .walk .w-base{fill:none;stroke:#f3dfa8;stroke-width:16;stroke-linecap:round;vector-effect:non-scaling-stroke}
   .walk .w-edge{fill:none;stroke:var(--navy);stroke-width:20;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.18}
   .walk .w-dash{fill:none;stroke:#fff;stroke-width:3;stroke-dasharray:2 9;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.9}
-  .walk .w-tick{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:var(--navy);opacity:.35}
-  .walk .w-tick.big{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;opacity:.75}
-  .walk .w-tick.done{background:var(--sun);opacity:1;border:1.5px solid var(--navy)}
   .walk .w-lbl{position:absolute;font-size:11px;font-weight:800;letter-spacing:.06em;background:var(--white);border:2px solid var(--navy);border-radius:999px;padding:0 8px;line-height:1.5;transform:translateX(-50%);white-space:nowrap}
-  .walk .w-now{position:absolute;left:14px;top:10px;font-size:12px;font-weight:800;background:rgba(255,255,255,.88);border-radius:999px;padding:1px 12px;max-width:calc(100% - 28px)}
+  .walk .w-now{position:absolute;z-index:2;width:max-content;max-width:calc(100% - 12px);text-align:center;font-size:12px;font-weight:800;line-height:1.5;background:rgba(255,255,255,.94);border:2px solid var(--navy);border-radius:12px;padding:2px 12px;pointer-events:none}
+  .walk .w-now::after{content:"";position:absolute;left:var(--tx,50%);bottom:-7px;width:10px;height:10px;margin-left:-5px;background:inherit;border:solid var(--navy);border-width:0 2px 2px 0;transform:rotate(45deg)}
   .walk .w-flag{position:absolute;width:30px;height:38px;transform:translate(-50%,-92%);pointer-events:none}
   .walk .w-pair{position:absolute;width:52px;height:60px;transform:translate(-50%,-90%);pointer-events:none;will-change:left,top}
   .walk .w-pair svg{display:block;width:100%;height:100%;overflow:visible;animation:wbob .7s ease-in-out infinite alternate}
   .walk.resting .w-pair svg{animation:none}
   @keyframes wbob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
-  @media(max-width:640px){.walk{height:130px}.walk .w-pair{width:44px;height:51px}}
+  @media(max-width:640px){.walk{height:150px}.walk .w-pair{width:44px;height:51px}}
   @media(prefers-reduced-motion:reduce){.walk .w-pair svg{animation:none}}
 
   /* ============ 手繪路線地圖 ============ */
@@ -405,7 +403,7 @@
     </svg>`;
     const FLAG = `<svg class="w-flag" viewBox="0 0 30 38" aria-hidden="true"><path d="M6 36V3" stroke="#0e4b4d" stroke-width="3" stroke-linecap="round"/><path d="M6 4h19l-5 6 5 6H6z" fill="#ff7f8f" stroke="#0e4b4d" stroke-width="2.4" stroke-linejoin="round"/></svg>`;
 
-    let el, path, len, pts = [], pair, nowTxt, ticks = [], shown = -1, raf = 0, timer = 0, stopped = false;
+    let el, path, len, pair, nowTxt, shown = -1, raf = 0, timer = 0, stopped = false;
     const pad2 = n => String(n).padStart(2, "0");
     const nowFn = () => (MiyakoWalk._now ? MiyakoWalk._now() : new Date());
 
@@ -421,6 +419,11 @@
     function place(h) {
       const q = pct(at(h));
       pair.style.left = q.l + "%"; pair.style.top = q.t + "%";
+      const cw = el.clientWidth, ch = el.clientHeight, cx = q.l / 100 * cw, bw = nowTxt.offsetWidth;
+      const left = Math.max(6, Math.min(cx - bw / 2, cw - bw - 6));
+      nowTxt.style.left = left + "px";
+      nowTxt.style.top = Math.max(2, q.t / 100 * ch - pair.offsetHeight * 0.9 - 10 - nowTxt.offsetHeight) + "px";
+      nowTxt.style.setProperty("--tx", Math.max(14, Math.min(cx - left, bw - 14)) + "px");
     }
     function glide(from, to) {
       cancelAnimationFrame(raf);
@@ -438,12 +441,11 @@
       const d = nowFn(), st = state(d);
       const h = st.hour;
       el.classList.toggle("resting", st.k !== "run");
-      ticks.forEach((t, i) => t.classList.toggle("done", st.k !== "before" && i <= h));
       const md = st.k === "before" ? "10/2" : (st.k === "after" ? "10/7" : (d.getMonth() + 1) + "/" + d.getDate());
       const msg = st.k === "before" ? "旅程 10/2 00:00 出發，小人先在起點等你"
         : st.k === "after" ? "旅程結束，下次再一起出發！"
         : md + "　" + pad2(h) + ":00　今天已經走了 " + Math.round(h / 23 * 100) + "%";
-      nowTxt.textContent = (st.k === "before" ? "🚶 " : st.k === "after" ? "🏁 " : "🕒 ") + msg;
+      nowTxt.textContent = msg;
       el.setAttribute("aria-label", msg);
       const target = h;
       if (animate && shown >= 0 && shown !== target) {
@@ -472,12 +474,6 @@
       svg.innerHTML = '<path class="w-edge" d="' + D + '"/><path class="w-base" d="' + D + '"/><path class="w-dash" d="' + D + '"/>';
       el.appendChild(svg);
       path = svg.querySelectorAll("path")[2]; len = path.getTotalLength();
-      ticks = [];
-      for (let h = 0; h <= 23; h++) {
-        const q = pct(at(h)), t = document.createElement("i");
-        t.className = "w-tick" + (h % 6 === 0 ? " big" : ""); t.style.left = q.l + "%"; t.style.top = q.t + "%";
-        el.appendChild(t); ticks.push(t);
-      }
       [[0, "00:00"], [23, "24:00"]].forEach(([h, txt]) => {
         const q = pct(at(h)), b = document.createElement("span");
         b.className = "w-lbl"; b.textContent = txt; b.style.left = q.l + "%"; b.style.top = "calc(" + q.t + "% + 14px)";
@@ -495,6 +491,7 @@
       build(); paint(false);
       schedule();
     }
+    addEventListener("resize", () => { if (el && el.isConnected && shown >= 0) place(shown); });
     // 手機休眠後回來：補算一次，並在未結束時重新排程
     document.addEventListener("visibilitychange", () => {
       if (document.hidden || !el || stopped) return;
